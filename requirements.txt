@@ -1,0 +1,5 @@
+# Core app uses Python standard library + tkinter.
+# Optional extras:
+SpeechRecognition>=3.10.0
+keyring>=25.0.0
+

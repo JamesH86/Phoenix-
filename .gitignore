@@ -1,0 +1,16 @@
+__pycache__/
+*.py[cod]
+*.pyo
+*.log
+*.tmp
+*.bak
+.env
+.env.*
+!.env.example
+phoenix_guardian_scope.json
+phoenix_guardian_chat_memory.json
+phoenix_guardian_secrets.json
+*.csv
+*.sqlite
+*.db
+
