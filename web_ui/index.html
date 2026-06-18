@@ -4,6 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Phoenix Guardian Web HUD</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 80 80'%3E%3Cpath fill='%23fb923c' stroke='%2322d3ee' stroke-width='4' d='M40 6c6 12 12 22 26 31-11 0-18 4-21 12l-5 21-5-21c-3-8-10-12-21-12C28 28 34 18 40 6Z'/%3E%3C/svg%3E" />
     <link rel="stylesheet" href="./styles.css" />
   </head>
   <body>
@@ -28,6 +29,7 @@
           <button class="nav-item" data-panel="intelligence">Intelligence</button>
           <button class="nav-item" data-panel="operations">Operations</button>
           <button class="nav-item" data-panel="reports">Reports</button>
+          <button class="nav-item" data-panel="settings">Settings</button>
         </nav>
 
         <section class="side-card">
@@ -45,11 +47,50 @@
           </div>
           <div class="command-strip" role="search">
             <label for="target-input">Target</label>
-            <input id="target-input" value="authorized-scope.example" />
+            <input id="target-input" value="example.com" />
             <button id="add-scope">Add Scope</button>
             <button id="run-scan">Run Audit</button>
           </div>
         </header>
+
+        <section class="control-deck" aria-label="Phoenix controls">
+          <label>
+            <span>Research Query</span>
+            <input id="query-input" value="web application API cloud auth bug bounty" />
+          </label>
+          <label>
+            <span>Browser URL</span>
+            <input id="browser-input" value="https://example.com" />
+          </label>
+          <label>
+            <span>WSL Distro</span>
+            <input id="distro-input" value="kali-linux" />
+          </label>
+          <label>
+            <span>WSL Command</span>
+            <input id="wsl-input" value="uname -a && command -v nmap || true" />
+          </label>
+          <label>
+            <span>Fraud CSV Path</span>
+            <input id="fraud-input" placeholder="C:\\path\\transactions.csv" />
+          </label>
+          <label>
+            <span>Chat Prompt</span>
+            <input id="chat-input" value="Give me a concise Phoenix Guardian readiness report." />
+          </label>
+          <label>
+            <span>Groq Key</span>
+            <input id="groq-key-input" type="password" autocomplete="off" placeholder="Stored locally or paste for this session" />
+          </label>
+          <label>
+            <span>Groq Model</span>
+            <input id="groq-model-input" value="llama-3.1-8b-instant" />
+          </label>
+          <label>
+            <span>HackerOne Handle</span>
+            <input id="hackerone-handle-input" value="shopify" />
+          </label>
+        </section>
 
         <section class="mission-grid" aria-label="Mission KPIs">
           <article class="metric-card">
@@ -59,7 +100,7 @@
           </article>
           <article class="metric-card">
             <span>Evidence Quality</span>
-            <strong>92%</strong>
+            <strong id="evidence-quality">Ready</strong>
             <small>Report-ready signal</small>
           </article>
           <article class="metric-card warning">
@@ -112,17 +153,17 @@
               <strong>Findings by Severity</strong>
             </div>
             <div class="donut-wrap">
-              <div class="donut" aria-label="Severity chart"></div>
+              <div class="donut" id="severity-donut" aria-label="Severity chart"></div>
               <div class="donut-center">
-                <strong>18</strong>
+                <strong id="donut-total">0</strong>
                 <span>signals</span>
               </div>
             </div>
-            <ul class="legend">
-              <li><span class="dot high"></span>High <strong>4</strong></li>
-              <li><span class="dot med"></span>Medium <strong>7</strong></li>
-              <li><span class="dot low"></span>Low <strong>5</strong></li>
-              <li><span class="dot info"></span>Info <strong>2</strong></li>
+            <ul class="legend" id="severity-legend">
+              <li><span class="dot high"></span>High <strong>0</strong></li>
+              <li><span class="dot med"></span>Medium <strong>0</strong></li>
+              <li><span class="dot low"></span>Low <strong>0</strong></li>
+              <li><span class="dot info"></span>Info <strong>0</strong></li>
             </ul>
           </article>
 
@@ -130,15 +171,9 @@
             <div class="panel-heading">
               <span class="eyebrow">Command</span>
               <strong id="panel-title">Operational Overview</strong>
+              <small id="panel-subtitle">Live local backend actions.</small>
             </div>
-            <div class="action-bar" aria-label="Phoenix actions">
-              <button data-action="status">Refresh Status</button>
-              <button data-action="checklist">Bug Bounty Checklist</button>
-              <button data-action="vectors">Current Vectors</button>
-              <button data-action="voice">Voice Diagnostics</button>
-              <button data-action="kali">Kali Inventory</button>
-              <button data-action="summary">Report Summary</button>
-            </div>
+            <div class="action-bar" id="action-bar" aria-label="Phoenix actions"></div>
             <div class="signal-list" id="signal-list"></div>
           </article>
 

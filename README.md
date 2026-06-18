@@ -42,7 +42,7 @@ Open:
 http://127.0.0.1:8787
 ```
 
-The web shell can read local Phoenix status, add authorized scope, run scoped web audits, show bug bounty checklists, request current-vector intelligence, run voice diagnostics, summarize findings, and call Kali inventory through the local backend.
+The web shell now has real tab-specific actions for Command, Bug Bounty, Intelligence, Operations, Reports, and Settings. It can read local Phoenix status, add authorized scope, run scoped web audits, draft bug bounty reports, check Burp readiness, request current-vector intelligence, fetch public browser context, catalog Kali wordlists, run guarded WSL commands, run voice diagnostics, prepare fraud evidence reports, summarize findings, and display launch guardrails through the local backend.
 
 ## Optional Features
 

@@ -192,6 +192,43 @@ h1 {
   padding: 11px 14px;
 }
 
+.control-deck {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(180px, 1fr));
+  gap: 10px;
+  max-height: 178px;
+  margin-bottom: 14px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  background: rgba(3, 7, 14, 0.62);
+  overflow: auto;
+}
+
+.control-deck label {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+}
+
+.control-deck span,
+.panel-heading small {
+  color: var(--muted);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.control-deck input {
+  width: 100%;
+  min-width: 0;
+  border: 1px solid rgba(143, 164, 187, 0.22);
+  background: rgba(0, 0, 0, 0.34);
+  color: var(--text);
+  padding: 9px 10px;
+  outline: none;
+}
+
 .mission-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -261,14 +298,24 @@ h1 {
   position: relative;
   z-index: 1;
   display: flex;
-  align-items: baseline;
+  align-items: flex-start;
   justify-content: space-between;
   gap: 18px;
   margin-bottom: 12px;
 }
 
 .panel-heading strong {
+  display: block;
   font-size: 1rem;
+}
+
+.panel-heading small {
+  display: block;
+  max-width: 520px;
+  margin-top: 5px;
+  line-height: 1.45;
+  text-transform: none;
+  letter-spacing: 0;
 }
 
 .route-map {
@@ -443,6 +490,86 @@ h1 {
   white-space: pre-wrap;
 }
 
+.guardrail-row {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 12px;
+  border: 1px solid rgba(143, 164, 187, 0.16);
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.guardrail-row strong,
+.tool-card strong {
+  display: block;
+  color: var(--text);
+}
+
+.guardrail-row p,
+.tool-card p {
+  margin: 6px 0 0;
+  color: var(--muted);
+  line-height: 1.45;
+}
+
+.toggle {
+  flex: 0 0 auto;
+  width: 54px;
+  height: 30px;
+  padding: 3px;
+  border: 1px solid rgba(103, 232, 249, 0.35);
+  border-radius: 999px;
+  background: rgba(143, 164, 187, 0.2);
+}
+
+.toggle span {
+  display: block;
+  width: 22px;
+  height: 22px;
+  border-radius: 999px;
+  background: var(--muted);
+}
+
+.toggle.on {
+  background: rgba(52, 211, 153, 0.22);
+}
+
+.toggle.on span {
+  margin-left: 22px;
+  background: var(--green);
+}
+
+.tool-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.tool-card {
+  border: 1px solid rgba(103, 232, 249, 0.18);
+  background: rgba(0, 0, 0, 0.22);
+  padding: 12px;
+}
+
+.tool-card span,
+.tool-card em {
+  color: var(--cyan);
+  font-size: 0.72rem;
+  font-style: normal;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.tool-card em {
+  display: inline-block;
+  margin-top: 12px;
+  color: var(--green);
+}
+
 pre {
   position: relative;
   z-index: 1;
@@ -465,7 +592,9 @@ pre {
   }
 
   .mission-grid,
-  .content-grid {
+  .content-grid,
+  .control-deck,
+  .tool-grid {
     grid-template-columns: 1fr;
   }
 

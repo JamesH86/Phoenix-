@@ -16,4 +16,4 @@ Then open:
 http://127.0.0.1:8787
 ```
 
-The shell currently exposes local API actions for status, authorized scope, scoped web audits, bug bounty checklist output, current-vector intelligence, voice diagnostics, Kali inventory, and report summaries. It is designed to become the future Phoenix Guardian shell while the existing Python/Tkinter app remains available as the working desktop engine.
+The shell exposes real local API actions for all visible tabs: status, authorized scope, scoped web audits, bug bounty checklist output, bug bounty report drafts, Burp status, HackerOne readiness guidance, current-vector intelligence, browser context fetches, wordlist inventory, voice diagnostics, Kali inventory, guarded WSL commands, fraud report preparation, defensive response, guardrail review, tool matrix review, and report summaries.
