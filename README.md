@@ -47,7 +47,7 @@ The web shell now has real tab-specific actions for Command, Bug Bounty, Intelli
 ## Optional Features
 
 - Set `GROQ_API_KEY` or save a Groq key in the app Settings tab for chat.
-- Install `SpeechRecognition` and a working microphone stack for Python voice recognition.
+- Install `SpeechRecognition` for Python voice recognition. Direct microphone capture also needs PyAudio/PortAudio; on Kali/WSL use `sudo apt-get install -y python3-pyaudio portaudio19-dev`.
 - Windows System.Speech is used as a fallback for voice commands.
 - Kali/WSL features require WSL2 and the configured Kali distro.
 

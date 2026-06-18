@@ -539,6 +539,12 @@ def voice_dependency_report():
         import speech_recognition as sr
         lines.append(f"Python SpeechRecognition: installed ({getattr(sr, '__version__', 'unknown version')})")
         try:
+            import pyaudio
+            lines.append(f"Python PyAudio microphone binding: installed ({getattr(pyaudio, '__version__', 'unknown version')})")
+        except ImportError:
+            lines.append("Python PyAudio microphone binding: not installed.")
+            lines.append("Kali/WSL install needed for microphone capture: sudo apt-get install -y python3-pyaudio portaudio19-dev")
+        try:
             microphones = sr.Microphone.list_microphone_names()
             lines.append(f"Python microphones detected: {len(microphones)}")
             for index, name in enumerate(microphones[:8]):
@@ -4628,6 +4634,10 @@ class PhoenixGuardian(tk.Tk):
             errors.append("Python SpeechRecognition is not installed.")
 
         if sr is not None:
+            try:
+                import pyaudio  # noqa: F401
+            except ImportError:
+                errors.append("Python SpeechRecognition is installed, but PyAudio is missing. Install python3-pyaudio/portaudio for direct microphone capture.")
             try:
                 recognizer = sr.Recognizer()
                 recognizer.dynamic_energy_threshold = True
