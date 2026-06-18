@@ -53,40 +53,36 @@
           </div>
         </header>
 
-        <section class="control-deck" aria-label="Phoenix controls">
-          <label>
+        <section class="control-deck" id="control-deck" aria-label="Phoenix tab controls">
+          <label data-control="query">
             <span>Research Query</span>
             <input id="query-input" value="web application API cloud auth bug bounty" />
           </label>
-          <label>
+          <label data-control="browser">
             <span>Browser URL</span>
             <input id="browser-input" value="https://example.com" />
           </label>
-          <label>
+          <label data-control="distro">
             <span>WSL Distro</span>
             <input id="distro-input" value="kali-linux" />
           </label>
-          <label>
+          <label data-control="wsl">
             <span>WSL Command</span>
             <input id="wsl-input" value="uname -a && command -v nmap || true" />
           </label>
-          <label>
+          <label data-control="fraud">
             <span>Fraud CSV Path</span>
             <input id="fraud-input" placeholder="C:\\path\\transactions.csv" />
           </label>
-          <label>
-            <span>Chat Prompt</span>
-            <input id="chat-input" value="Give me a concise Phoenix Guardian readiness report." />
-          </label>
-          <label>
+          <label data-control="groq-key">
             <span>Groq Key</span>
             <input id="groq-key-input" type="password" autocomplete="off" placeholder="Stored locally or paste for this session" />
           </label>
-          <label>
+          <label data-control="groq-model">
             <span>Groq Model</span>
             <input id="groq-model-input" value="llama-3.1-8b-instant" />
           </label>
-          <label>
+          <label data-control="hackerone">
             <span>HackerOne Handle</span>
             <input id="hackerone-handle-input" value="shopify" />
           </label>
@@ -175,6 +171,20 @@
             </div>
             <div class="action-bar" id="action-bar" aria-label="Phoenix actions"></div>
             <div class="signal-list" id="signal-list"></div>
+          </article>
+
+          <article class="hud-panel chat-panel">
+            <div class="panel-heading">
+              <span class="eyebrow">Phoenix Chat</span>
+              <strong>Groq Command Assistant</strong>
+            </div>
+            <div id="chat-output" class="chat-output" aria-live="polite">
+              <div class="chat-message assistant">Phoenix chat is ready. Ask for scoped testing help, report drafting, defensive triage, or operational guidance.</div>
+            </div>
+            <div class="chat-compose">
+              <textarea id="chat-input" rows="3" placeholder="Ask Phoenix Guardian...">Give me a concise Phoenix Guardian readiness report.</textarea>
+              <button id="chat-send">Send</button>
+            </div>
           </article>
 
           <article class="hud-panel terminal-panel">

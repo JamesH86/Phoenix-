@@ -3,6 +3,7 @@ const panelConfig = {
     title: "Command Center",
     state: "Command",
     subtitle: "Live local backend, scope, guardrails, memory, and chat-ready actions.",
+    controls: ["groq-key", "groq-model"],
     actions: [
       ["status", "Refresh Status"],
       ["guardrails", "Guardrails"],
@@ -15,6 +16,7 @@ const panelConfig = {
     title: "Bug Bounty Workspace",
     state: "Bounty",
     subtitle: "Scope-first testing, Burp readiness, HackerOne prep, and draft reports.",
+    controls: ["query", "distro", "hackerone"],
     actions: [
       ["checklist", "Checklist"],
       ["web-audit", "Run Audit"],
@@ -28,6 +30,7 @@ const panelConfig = {
     title: "Intelligence Hub",
     state: "Intel",
     subtitle: "Public web context, CVE/vector tracking, wordlists, and research memory.",
+    controls: ["query", "browser", "distro"],
     actions: [
       ["vectors", "Current Vectors"],
       ["browser", "Browser Context"],
@@ -40,6 +43,7 @@ const panelConfig = {
     title: "Operations Bridge",
     state: "Ops",
     subtitle: "Kali WSL, voice diagnostics, defensive response, fraud triage, and guarded commands.",
+    controls: ["distro", "wsl", "fraud"],
     actions: [
       ["kali", "Kali Inventory"],
       ["wsl", "Run WSL Command"],
@@ -52,6 +56,7 @@ const panelConfig = {
     title: "Reports & Evidence",
     state: "Reports",
     subtitle: "Executive summaries, evidence handoff, bug bounty drafts, and clean exports.",
+    controls: ["fraud", "hackerone"],
     actions: [
       ["summary", "Executive Summary"],
       ["bug-report", "Bug Bounty Draft"],
@@ -64,6 +69,7 @@ const panelConfig = {
     title: "Settings",
     state: "Settings",
     subtitle: "Provider, HackerOne, WSL, browser, and guardrail configuration.",
+    controls: ["groq-key", "groq-model", "hackerone", "distro"],
     actions: [
       ["guardrails", "Guardrails"],
       ["groq", "Test Groq"],
@@ -87,6 +93,8 @@ const scopeCount = document.querySelector("#scope-count");
 const evidenceQuality = document.querySelector("#evidence-quality");
 const terminalOutput = document.querySelector("#terminal-output");
 const actionBar = document.querySelector("#action-bar");
+const controlDeck = document.querySelector("#control-deck");
+const controlLabels = document.querySelectorAll("[data-control]");
 const targetInput = document.querySelector("#target-input");
 const queryInput = document.querySelector("#query-input");
 const browserInput = document.querySelector("#browser-input");
@@ -94,6 +102,8 @@ const distroInput = document.querySelector("#distro-input");
 const wslInput = document.querySelector("#wsl-input");
 const fraudInput = document.querySelector("#fraud-input");
 const chatInput = document.querySelector("#chat-input");
+const chatOutput = document.querySelector("#chat-output");
+const chatSend = document.querySelector("#chat-send");
 const groqKeyInput = document.querySelector("#groq-key-input");
 const groqModelInput = document.querySelector("#groq-model-input");
 const hackeroneHandleInput = document.querySelector("#hackerone-handle-input");
@@ -145,10 +155,20 @@ function renderPanel(key) {
   actionBar.querySelectorAll("[data-action]").forEach((button) => {
     button.addEventListener("click", () => withBusy(button.textContent, () => runAction(button.dataset.action)));
   });
+  renderControls(panel.controls || []);
   renderRows(defaultRows(key));
   if (lastStatus) {
     updateKpis(lastStatus);
   }
+}
+
+function renderControls(controls) {
+  const visible = new Set(controls);
+  controlLabels.forEach((label) => {
+    const isVisible = visible.has(label.dataset.control);
+    label.hidden = !isVisible;
+  });
+  controlDeck.hidden = visible.size === 0;
 }
 
 function defaultRows(key) {
@@ -440,17 +460,32 @@ async function runAction(action) {
     return;
   }
   if (action === "groq") {
-    const message = chatInput.value.trim() || "Give me a concise Phoenix Guardian status report.";
-    const result = await api("/api/groq-chat", {
-      method: "POST",
-      body: JSON.stringify({
-        message,
-        apiKey: groqKeyInput.value.trim(),
-        model: groqModelInput.value.trim() || "llama-3.1-8b-instant",
-      }),
-    });
-    renderOutput("Groq Command", result.text);
+    await sendChat();
   }
+}
+
+async function sendChat() {
+  const message = chatInput.value.trim() || "Give me a concise Phoenix Guardian status report.";
+  appendChat("user", message);
+  chatInput.value = "";
+  const result = await api("/api/groq-chat", {
+    method: "POST",
+    body: JSON.stringify({
+      message,
+      apiKey: groqKeyInput.value.trim(),
+      model: groqModelInput.value.trim() || "llama-3.1-8b-instant",
+    }),
+  });
+  appendChat("assistant", result.text);
+  renderOutput("Groq Command", result.text);
+}
+
+function appendChat(role, text) {
+  const node = document.createElement("div");
+  node.className = `chat-message ${role}`;
+  node.textContent = text;
+  chatOutput.appendChild(node);
+  chatOutput.scrollTop = chatOutput.scrollHeight;
 }
 
 function renderGuardrails(guardrails) {
@@ -511,6 +546,13 @@ navItems.forEach((button) => {
 
 addScope.addEventListener("click", () => withBusy("Adding Scope", addTargetToScope));
 runScan.addEventListener("click", () => withBusy("Running Audit", runWebAudit));
+chatSend.addEventListener("click", () => withBusy("Asking Groq", sendChat));
+chatInput.addEventListener("keydown", (event) => {
+  if (event.key === "Enter" && (event.ctrlKey || event.metaKey)) {
+    event.preventDefault();
+    withBusy("Asking Groq", sendChat);
+  }
+});
 
 renderPanel("command");
 refreshStatus().catch((error) => renderOutput("API Offline", error.message));
