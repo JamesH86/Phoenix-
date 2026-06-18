@@ -30,7 +30,7 @@ python .\phoenix_guardian.py
 
 ## Web UI Preview
 
-Phoenix Guardian now includes a zero-install web UI preview built with semantic HTML, modern CSS, and plain JavaScript. It is the visual direction for the future desktop shell while the Python app remains the working security engine.
+Phoenix Guardian now includes a zero-install web UI preview built with semantic HTML, modern CSS, plain JavaScript, and a local Python API bridge. It is the visual direction for the future desktop shell while the Python app remains the working security engine.
 
 ```bash
 python3 tools/serve_web_ui.py
@@ -41,6 +41,8 @@ Open:
 ```text
 http://127.0.0.1:8787
 ```
+
+The web shell can read local Phoenix status, add authorized scope, run scoped web audits, show bug bounty checklists, request current-vector intelligence, run voice diagnostics, summarize findings, and call Kali inventory through the local backend.
 
 ## Optional Features
 

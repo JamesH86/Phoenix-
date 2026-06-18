@@ -383,6 +383,30 @@ h1 {
   gap: 10px;
 }
 
+.action-bar {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.action-bar button {
+  border: 1px solid rgba(103, 232, 249, 0.25);
+  background: rgba(34, 211, 238, 0.08);
+  color: var(--text);
+  cursor: pointer;
+  font-size: 0.82rem;
+  font-weight: 800;
+  padding: 9px 10px;
+}
+
+.action-bar button:hover {
+  border-color: var(--cyan);
+  background: rgba(34, 211, 238, 0.16);
+}
+
 .signal-row {
   display: grid;
   grid-template-columns: 120px 1fr auto;
@@ -408,6 +432,15 @@ h1 {
   color: var(--cyan);
   font-style: normal;
   font-weight: 900;
+}
+
+.signal-row.output {
+  grid-template-columns: 1fr;
+}
+
+.signal-row.output pre {
+  max-height: 360px;
+  white-space: pre-wrap;
 }
 
 pre {
@@ -442,4 +475,3 @@ pre {
     flex-direction: column;
   }
 }
-

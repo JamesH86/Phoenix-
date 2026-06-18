@@ -46,7 +46,8 @@
           <div class="command-strip" role="search">
             <label for="target-input">Target</label>
             <input id="target-input" value="authorized-scope.example" />
-            <button id="run-scan">Run Mission</button>
+            <button id="add-scope">Add Scope</button>
+            <button id="run-scan">Run Audit</button>
           </div>
         </header>
 
@@ -130,6 +131,14 @@
               <span class="eyebrow">Command</span>
               <strong id="panel-title">Operational Overview</strong>
             </div>
+            <div class="action-bar" aria-label="Phoenix actions">
+              <button data-action="status">Refresh Status</button>
+              <button data-action="checklist">Bug Bounty Checklist</button>
+              <button data-action="vectors">Current Vectors</button>
+              <button data-action="voice">Voice Diagnostics</button>
+              <button data-action="kali">Kali Inventory</button>
+              <button data-action="summary">Report Summary</button>
+            </div>
             <div class="signal-list" id="signal-list"></div>
           </article>
 
@@ -150,4 +159,3 @@ wsl2 kali: ready for authorized tasks</pre>
     <script src="./app.js"></script>
   </body>
 </html>
-
