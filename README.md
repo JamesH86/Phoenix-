@@ -28,6 +28,20 @@ On Windows, launch it with Python from the repository folder:
 python .\phoenix_guardian.py
 ```
 
+## Web UI Preview
+
+Phoenix Guardian now includes a zero-install web UI preview built with semantic HTML, modern CSS, and plain JavaScript. It is the visual direction for the future desktop shell while the Python app remains the working security engine.
+
+```bash
+python3 tools/serve_web_ui.py
+```
+
+Open:
+
+```text
+http://127.0.0.1:8787
+```
+
 ## Optional Features
 
 - Set `GROQ_API_KEY` or save a Groq key in the app Settings tab for chat.

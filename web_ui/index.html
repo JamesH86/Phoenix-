@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Phoenix Guardian Web HUD</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar" aria-label="Phoenix Guardian navigation">
+        <div class="brand">
+          <div class="brand-mark" aria-hidden="true">
+            <svg viewBox="0 0 80 80" role="img">
+              <path d="M40 6c6 12 12 22 26 31-11 0-18 4-21 12l-5 21-5-21c-3-8-10-12-21-12C28 28 34 18 40 6Z" />
+              <path d="M16 31c9-18 22-21 24-21M64 31C55 13 42 10 40 10" />
+            </svg>
+          </div>
+          <div>
+            <strong>Phoenix</strong>
+            <span>Guardian</span>
+          </div>
+        </div>
+
+        <nav class="nav-list" aria-label="Primary">
+          <button class="nav-item active" data-panel="command">Command</button>
+          <button class="nav-item" data-panel="bug-bounty">Bug Bounty</button>
+          <button class="nav-item" data-panel="intelligence">Intelligence</button>
+          <button class="nav-item" data-panel="operations">Operations</button>
+          <button class="nav-item" data-panel="reports">Reports</button>
+        </nav>
+
+        <section class="side-card">
+          <span class="eyebrow">System State</span>
+          <strong id="system-state">Ready</strong>
+          <p>Local-first security cockpit with scoped audit guardrails.</p>
+        </section>
+      </aside>
+
+      <main class="workspace">
+        <header class="topbar">
+          <div>
+            <p class="eyebrow">Phoenix Guardian Web Shell</p>
+            <h1>Cybersecurity Operations Cockpit</h1>
+          </div>
+          <div class="command-strip" role="search">
+            <label for="target-input">Target</label>
+            <input id="target-input" value="authorized-scope.example" />
+            <button id="run-scan">Run Mission</button>
+          </div>
+        </header>
+
+        <section class="mission-grid" aria-label="Mission KPIs">
+          <article class="metric-card">
+            <span>Scope Assets</span>
+            <strong id="scope-count">12</strong>
+            <small>3 high-priority programs</small>
+          </article>
+          <article class="metric-card">
+            <span>Evidence Quality</span>
+            <strong>92%</strong>
+            <small>Report-ready signal</small>
+          </article>
+          <article class="metric-card warning">
+            <span>High Risk</span>
+            <strong id="risk-count">4</strong>
+            <small>Needs validation</small>
+          </article>
+          <article class="metric-card">
+            <span>Automation</span>
+            <strong id="automation-state">Idle</strong>
+            <small>Safe actions queued</small>
+          </article>
+        </section>
+
+        <section class="content-grid">
+          <article class="hud-panel route-panel">
+            <div class="panel-heading">
+              <span class="eyebrow">Mission Route</span>
+              <strong>Scope to Report Pipeline</strong>
+            </div>
+            <div class="route-map" aria-hidden="true">
+              <svg viewBox="0 0 760 380">
+                <defs>
+                  <linearGradient id="routeGradient" x1="0" x2="1">
+                    <stop offset="0" stop-color="#22d3ee" />
+                    <stop offset="0.55" stop-color="#a855f7" />
+                    <stop offset="1" stop-color="#fb923c" />
+                  </linearGradient>
+                  <filter id="glow">
+                    <feGaussianBlur stdDeviation="4" result="blur" />
+                    <feMerge>
+                      <feMergeNode in="blur" />
+                      <feMergeNode in="SourceGraphic" />
+                    </feMerge>
+                  </filter>
+                </defs>
+                <path class="city-grid" d="M20 320h720M20 260h720M20 200h720M20 140h720M120 40v320M260 40v320M400 40v320M540 40v320M680 40v320" />
+                <path class="route-line" d="M72 308 C160 240, 198 252, 270 184 S420 102, 512 142 S625 222, 704 78" />
+                <g class="route-node"><circle cx="72" cy="308" r="12" /><text x="72" y="344">Scope</text></g>
+                <g class="route-node"><circle cx="270" cy="184" r="12" /><text x="270" y="220">Intel</text></g>
+                <g class="route-node"><circle cx="512" cy="142" r="12" /><text x="512" y="178">Validate</text></g>
+                <g class="route-node final"><circle cx="704" cy="78" r="15" /><text x="704" y="116">Report</text></g>
+              </svg>
+            </div>
+          </article>
+
+          <article class="hud-panel analytics-panel">
+            <div class="panel-heading">
+              <span class="eyebrow">Threat Mix</span>
+              <strong>Findings by Severity</strong>
+            </div>
+            <div class="donut-wrap">
+              <div class="donut" aria-label="Severity chart"></div>
+              <div class="donut-center">
+                <strong>18</strong>
+                <span>signals</span>
+              </div>
+            </div>
+            <ul class="legend">
+              <li><span class="dot high"></span>High <strong>4</strong></li>
+              <li><span class="dot med"></span>Medium <strong>7</strong></li>
+              <li><span class="dot low"></span>Low <strong>5</strong></li>
+              <li><span class="dot info"></span>Info <strong>2</strong></li>
+            </ul>
+          </article>
+
+          <article class="hud-panel wide-panel" id="active-panel">
+            <div class="panel-heading">
+              <span class="eyebrow">Command</span>
+              <strong id="panel-title">Operational Overview</strong>
+            </div>
+            <div class="signal-list" id="signal-list"></div>
+          </article>
+
+          <article class="hud-panel terminal-panel">
+            <div class="panel-heading">
+              <span class="eyebrow">Local Bridge</span>
+              <strong>Kali / WSL / Groq</strong>
+            </div>
+            <pre id="terminal-output">$ phoenix status
+guardrails: locked
+scope mode: required
+groq: configured locally
+wsl2 kali: ready for authorized tasks</pre>
+          </article>
+        </section>
+      </main>
+    </div>
+    <script src="./app.js"></script>
+  </body>
+</html>
+
