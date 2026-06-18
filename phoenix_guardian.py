@@ -49,6 +49,10 @@ THEME = {
     "line": "#2b3245",
     "accent": "#7dd3fc",
     "accent_2": "#a78bfa",
+    "accent_3": "#fb923c",
+    "grid": "#172033",
+    "glow": "#164e63",
+    "route": "#38bdf8",
     "good": "#22c55e",
     "warn": "#f59e0b",
     "bad": "#ef4444",
@@ -56,6 +60,25 @@ THEME = {
 
 THEME_PRESETS = {
     "Codex Dark": dict(THEME),
+    "Phoenix HUD": {
+        "bg": "#05070c",
+        "panel": "#0b101a",
+        "panel_alt": "#101827",
+        "panel_soft": "#162033",
+        "field": "#050917",
+        "text": "#eef6ff",
+        "muted": "#8da2b7",
+        "line": "#26364f",
+        "accent": "#38d5ff",
+        "accent_2": "#b46cff",
+        "accent_3": "#ff8a3d",
+        "grid": "#102238",
+        "glow": "#0e7490",
+        "route": "#22d3ee",
+        "good": "#2dd4bf",
+        "warn": "#fbbf24",
+        "bad": "#fb7185",
+    },
     "Phoenix Fire": {
         "bg": "#120906",
         "panel": "#1b0f0b",
@@ -67,6 +90,10 @@ THEME_PRESETS = {
         "line": "#5c2b1a",
         "accent": "#fb923c",
         "accent_2": "#facc15",
+        "accent_3": "#38bdf8",
+        "grid": "#3a1a10",
+        "glow": "#7c2d12",
+        "route": "#f97316",
         "good": "#34d399",
         "warn": "#f59e0b",
         "bad": "#ef4444",
@@ -2087,7 +2114,7 @@ class PhoenixGuardian(tk.Tk):
         self.local_full_access = tk.BooleanVar(value=False)
         self.fraud_dataset_path = tk.StringVar(value="")
         self.burp_proxy_url = tk.StringVar(value="http://127.0.0.1:8080")
-        self.theme_name = tk.StringVar(value="Codex Dark")
+        self.theme_name = tk.StringVar(value="Phoenix HUD")
         self.groq_api_key = tk.StringVar(value=os.environ.get("GROQ_API_KEY", load_local_secret("GROQ_API_KEY")))
         self.groq_model = tk.StringVar(value=os.environ.get("GROQ_MODEL", GROQ_DEFAULT_MODEL))
         self.chat_preapprove = tk.BooleanVar(value=False)
@@ -2136,7 +2163,7 @@ class PhoenixGuardian(tk.Tk):
         ttk.Label(brand, text=APP_NAME, style="Title.TLabel").grid(row=0, column=1, sticky="w")
         ttk.Label(
             brand,
-            text="Codex-style command center for scoped security research, Groq chat, Kali WSL, and report-ready evidence",
+            text="Scoped security operations, Kali WSL, Groq command, fraud forensics, and report-ready evidence",
             style="Subtle.TLabel",
             wraplength=520,
         ).grid(row=1, column=1, sticky="w")
@@ -2268,29 +2295,33 @@ class PhoenixGuardian(tk.Tk):
             pass
         self.configure(bg=THEME["bg"])
         style.configure("Header.TFrame", background=THEME["bg"])
-        style.configure("Command.TFrame", background=THEME["panel"], borderwidth=1, relief="solid")
+        style.configure("Command.TFrame", background=THEME["panel_alt"], borderwidth=1, relief="solid")
         style.configure("Card.TFrame", background=THEME["panel_alt"], borderwidth=1, relief="solid")
+        style.configure("Hud.TFrame", background=THEME["panel"], borderwidth=1, relief="solid")
         style.configure("Title.TLabel", background=THEME["bg"], foreground=THEME["text"], font=("Segoe UI", 20, "bold"))
+        style.configure("Hero.TLabel", background=THEME["panel"], foreground=THEME["text"], font=("Segoe UI", 18, "bold"))
         style.configure("SectionTitle.TLabel", background=THEME["panel"], foreground=THEME["text"], font=("Segoe UI", 14, "bold"))
         style.configure("Subtle.TLabel", background=THEME["bg"], foreground=THEME["muted"], font=("Segoe UI", 10))
         style.configure("PanelSubtle.TLabel", background=THEME["panel"], foreground=THEME["muted"], font=("Segoe UI", 10))
         style.configure("CardTitle.TLabel", background=THEME["panel_alt"], foreground=THEME["text"], font=("Segoe UI", 10, "bold"))
         style.configure("CardSubtle.TLabel", background=THEME["panel_alt"], foreground=THEME["muted"], font=("Segoe UI", 10))
-        style.configure("StatValue.TLabel", background=THEME["panel_alt"], foreground=THEME["text"], font=("Segoe UI", 19, "bold"))
+        style.configure("StatCard.TFrame", background=THEME["panel_alt"], borderwidth=1, relief="solid")
+        style.configure("StatValue.TLabel", background=THEME["panel_alt"], foreground=THEME["text"], font=("Segoe UI", 20, "bold"))
         style.configure("StatName.TLabel", background=THEME["panel_alt"], foreground=THEME["muted"], font=("Segoe UI", 9, "bold"))
-        style.configure("Badge.TLabel", background="#1f3b57", foreground=THEME["accent"], font=("Segoe UI", 9, "bold"), padding=(8, 3))
-        style.configure("LockedBadge.TLabel", background="#3b2432", foreground="#fda4af", font=("Segoe UI", 9, "bold"), padding=(8, 3))
-        style.configure("Status.TLabel", background=THEME["panel_alt"], foreground="#cfd6e4")
+        style.configure("HudLabel.TLabel", background=THEME["panel"], foreground=THEME["accent"], font=("Segoe UI", 9, "bold"))
+        style.configure("Badge.TLabel", background=THEME["glow"], foreground=THEME["accent"], font=("Segoe UI", 9, "bold"), padding=(8, 3))
+        style.configure("LockedBadge.TLabel", background="#3b2432", foreground=THEME["bad"], font=("Segoe UI", 9, "bold"), padding=(8, 3))
+        style.configure("Status.TLabel", background=THEME["panel_alt"], foreground=THEME["muted"])
         style.configure("TNotebook", background=THEME["bg"], borderwidth=0, tabmargins=(0, 0, 0, 0))
-        style.configure("TNotebook.Tab", background=THEME["panel"], foreground="#cfd6e4", padding=(18, 9), font=("Segoe UI", 10))
-        style.map("TNotebook.Tab", background=[("selected", THEME["panel_soft"])], foreground=[("selected", THEME["text"])])
+        style.configure("TNotebook.Tab", background=THEME["panel"], foreground=THEME["muted"], padding=(18, 9), font=("Segoe UI", 10, "bold"))
+        style.map("TNotebook.Tab", background=[("selected", THEME["panel_soft"])], foreground=[("selected", THEME["accent"])])
         style.configure("TFrame", background=THEME["panel"])
-        style.configure("TLabel", background=THEME["panel"], foreground="#e5e7eb", font=("Segoe UI", 10))
+        style.configure("TLabel", background=THEME["panel"], foreground=THEME["text"], font=("Segoe UI", 10))
         style.configure("TButton", background=THEME["panel_soft"], foreground=THEME["text"], font=("Segoe UI", 10), padding=(11, 7), borderwidth=0)
-        style.map("TButton", background=[("active", "#283146")], foreground=[("disabled", "#6b7280")])
+        style.map("TButton", background=[("active", THEME["glow"])], foreground=[("disabled", "#6b7280")])
         style.configure("Primary.TButton", background=THEME["accent"], foreground=THEME["bg"], font=("Segoe UI", 10, "bold"), padding=(12, 7), borderwidth=0)
         style.map("Primary.TButton", background=[("active", THEME["accent_2"])])
-        style.configure("TCheckbutton", background=THEME["panel"], foreground="#e5e7eb", font=("Segoe UI", 10))
+        style.configure("TCheckbutton", background=THEME["panel"], foreground=THEME["text"], font=("Segoe UI", 10))
         style.map("TCheckbutton", background=[("active", THEME["panel"])])
         style.configure("TEntry", fieldbackground=THEME["field"], foreground=THEME["text"], bordercolor=THEME["line"], lightcolor=THEME["line"], darkcolor=THEME["line"], insertcolor=THEME["text"], borderwidth=1)
         style.configure("TCombobox", fieldbackground=THEME["field"], foreground=THEME["text"], background=THEME["panel_soft"])
@@ -2321,6 +2352,35 @@ class PhoenixGuardian(tk.Tk):
         canvas.create_arc(12, 6, 50, 54, start=40, extent=120, style="arc", outline=accent2, width=3)
         canvas.create_polygon(26, 18, 14, 46, 26, 38, 38, 46, fill=accent, outline="")
         canvas.create_line(26, 20, 26, 48, fill=THEME["text"], width=2)
+
+    def _draw_panel(self, canvas, x0, y0, x1, y1, title="", accent=None):
+        accent = accent or THEME["accent"]
+        canvas.create_rectangle(x0 + 4, y0 + 5, x1 + 4, y1 + 5, fill="#02040a", outline="")
+        canvas.create_rectangle(x0, y0, x1, y1, fill=THEME["panel"], outline=THEME["line"], width=1)
+        canvas.create_line(x0, y0, x0 + 60, y0, fill=accent, width=2)
+        canvas.create_line(x0, y0, x0, y0 + 34, fill=accent, width=2)
+        canvas.create_line(x1 - 60, y1, x1, y1, fill=accent, width=2)
+        canvas.create_line(x1, y1 - 34, x1, y1, fill=accent, width=2)
+        if title:
+            canvas.create_text(x0 + 16, y0 + 18, text=title.upper(), fill=accent, anchor="w", font=("Segoe UI", 9, "bold"))
+
+    def _draw_mini_phoenix(self, canvas, cx, cy, scale=1.0):
+        accent = THEME["accent_3"]
+        accent2 = THEME["accent"]
+        points = [
+            cx, cy - 26 * scale,
+            cx - 12 * scale, cy + 8 * scale,
+            cx - 34 * scale, cy + 20 * scale,
+            cx - 10 * scale, cy + 18 * scale,
+            cx, cy + 38 * scale,
+            cx + 10 * scale, cy + 18 * scale,
+            cx + 34 * scale, cy + 20 * scale,
+            cx + 12 * scale, cy + 8 * scale,
+        ]
+        canvas.create_polygon(points, fill=accent, outline="")
+        canvas.create_arc(cx - 46 * scale, cy - 18 * scale, cx + 4 * scale, cy + 42 * scale, start=32, extent=118, style="arc", outline=accent2, width=max(2, int(3 * scale)))
+        canvas.create_arc(cx - 4 * scale, cy - 18 * scale, cx + 46 * scale, cy + 42 * scale, start=30, extent=118, style="arc", outline=THEME["accent_2"], width=max(2, int(3 * scale)))
+        canvas.create_oval(cx - 5 * scale, cy - 34 * scale, cx + 5 * scale, cy - 24 * scale, fill=THEME["accent_2"], outline="")
 
     def _style_text_widgets(self):
         for widget in self.winfo_children():
@@ -2998,12 +3058,32 @@ class PhoenixGuardian(tk.Tk):
 
     def _dashboard_ui(self):
         self.dashboard_tab.columnconfigure(0, weight=1)
+        self.dashboard_tab.rowconfigure(2, weight=1)
         controls = ttk.Frame(self.dashboard_tab)
         controls.grid(row=0, column=0, sticky="ew")
-        ttk.Button(controls, text="Refresh Charts", command=self._refresh_dashboard).grid(row=0, column=0, sticky="w")
-        self.dashboard_canvas = tk.Canvas(self.dashboard_tab, bg="#0b1020", highlightthickness=0, height=520)
-        self.dashboard_canvas.grid(row=1, column=0, sticky="nsew", pady=(10, 0))
-        self.dashboard_tab.rowconfigure(1, weight=1)
+        ttk.Button(controls, text="Refresh Cockpit", style="Primary.TButton", command=self._refresh_dashboard).grid(row=0, column=0, sticky="w")
+        ttk.Label(controls, text="Phoenix HUD: scoped security posture, evidence quality, and mission readiness", style="PanelSubtle.TLabel").grid(row=0, column=1, sticky="w", padx=(12, 0))
+
+        stats = ttk.Frame(self.dashboard_tab)
+        stats.grid(row=1, column=0, sticky="ew", pady=(12, 0))
+        for col in range(4):
+            stats.columnconfigure(col, weight=1)
+        self.dashboard_stats = {}
+        for col, (key, label, value) in enumerate((
+            ("scope", "Scope Assets", "0"),
+            ("findings", "Findings", "0"),
+            ("critical", "High Risk", "0"),
+            ("automation", "Automation", "IDLE"),
+        )):
+            card = ttk.Frame(stats, style="StatCard.TFrame", padding=(14, 10))
+            card.grid(row=0, column=col, sticky="ew", padx=(0 if col == 0 else 8, 0))
+            ttk.Label(card, text=label.upper(), style="StatName.TLabel").grid(row=0, column=0, sticky="w")
+            value_label = ttk.Label(card, text=value, style="StatValue.TLabel")
+            value_label.grid(row=1, column=0, sticky="w", pady=(4, 0))
+            self.dashboard_stats[key] = value_label
+
+        self.dashboard_canvas = tk.Canvas(self.dashboard_tab, bg=THEME["field"], highlightthickness=0, height=560)
+        self.dashboard_canvas.grid(row=2, column=0, sticky="nsew", pady=(12, 0))
 
     def _drones_ui(self):
         self.drones_tab.columnconfigure(0, weight=1)
@@ -4341,42 +4421,99 @@ class PhoenixGuardian(tk.Tk):
         if not hasattr(self, "dashboard_canvas"):
             return
         canvas = self.dashboard_canvas
+        canvas.configure(bg=THEME["field"])
         canvas.delete("all")
-        width = max(canvas.winfo_width(), 900)
+        width = max(canvas.winfo_width(), 1080)
+        height = max(canvas.winfo_height(), 560)
         severity_counts = Counter(item.severity for item in self.findings)
         category_counts = Counter(item.category for item in self.findings)
-        colors = {"High": "#ef4444", "Medium": "#f59e0b", "Low": "#38bdf8", "Info": "#22c55e"}
-        canvas.create_text(30, 24, text="Phoenix Guardian Dashboard", fill="#f6f7fb", anchor="w", font=("Segoe UI", 18, "bold"))
-        canvas.create_text(30, 54, text=f"Findings: {len(self.findings)}", fill="#9ba3af", anchor="w", font=("Segoe UI", 11))
+        colors = {"High": THEME["bad"], "Medium": THEME["warn"], "Low": THEME["accent"], "Info": THEME["good"]}
+        money = monetary_estimate(self.findings)
+
+        if hasattr(self, "dashboard_stats"):
+            self.dashboard_stats["scope"].configure(text=str(len(self.scope.scope)))
+            self.dashboard_stats["findings"].configure(text=str(len(self.findings)))
+            self.dashboard_stats["critical"].configure(text=str(severity_counts.get("High", 0)))
+            self.dashboard_stats["automation"].configure(text="ACTIVE" if self.autonomous_enabled.get() else "IDLE")
+
+        for x in range(0, width, 48):
+            canvas.create_line(x, 0, x, height, fill=THEME["grid"])
+        for y in range(0, height, 42):
+            canvas.create_line(0, y, width, y, fill=THEME["grid"])
+
+        canvas.create_text(26, 24, text="PHOENIX GUARDIAN / OPS COCKPIT", fill=THEME["text"], anchor="w", font=("Segoe UI", 17, "bold"))
+        canvas.create_text(26, 52, text="Authorized scope telemetry, evidence readiness, and live security posture", fill=THEME["muted"], anchor="w", font=("Segoe UI", 10))
+        canvas.create_text(width - 26, 26, text=dt.datetime.now().strftime("%Y-%m-%d %H:%M"), fill=THEME["accent"], anchor="e", font=("Segoe UI", 10, "bold"))
+
+        left_w = min(330, max(280, width * 0.27))
+        right_w = min(370, max(310, width * 0.30))
+        mid_x0 = left_w + 32
+        mid_x1 = width - right_w - 32
+        panel_top = 76
+        panel_bottom = height - 26
+
+        self._draw_panel(canvas, 24, panel_top, left_w, panel_bottom, "Threat distribution", THEME["accent"])
+        self._draw_panel(canvas, mid_x0, panel_top, mid_x1, panel_bottom, "Mission route", THEME["accent_3"])
+        self._draw_panel(canvas, width - right_w, panel_top, width - 24, panel_bottom, "Evidence analytics", THEME["accent_2"])
 
         total = sum(severity_counts.values()) or 1
-        start = 0
-        x0, y0, x1, y1 = 40, 90, 300, 350
+        start = 90
+        cx, cy, radius = 164, 214, 96
         for severity in ("High", "Medium", "Low", "Info"):
             count = severity_counts.get(severity, 0)
             extent = 360 * count / total
-            canvas.create_arc(x0, y0, x1, y1, start=start, extent=extent, fill=colors[severity], outline="#0b1020")
+            if count or total == 1:
+                canvas.create_arc(cx - radius, cy - radius, cx + radius, cy + radius, start=start, extent=extent, style="pieslice", fill=colors[severity], outline=THEME["field"])
             start += extent
-        canvas.create_text(170, 375, text="Severity Pie", fill="#e5e7eb", font=("Segoe UI", 12, "bold"))
+        canvas.create_oval(cx - 54, cy - 54, cx + 54, cy + 54, fill=THEME["panel"], outline=THEME["line"])
+        canvas.create_text(cx, cy - 9, text=str(len(self.findings)), fill=THEME["text"], font=("Segoe UI", 24, "bold"))
+        canvas.create_text(cx, cy + 18, text="findings", fill=THEME["muted"], font=("Segoe UI", 9, "bold"))
         for idx, severity in enumerate(("High", "Medium", "Low", "Info")):
-            y = 410 + idx * 24
-            canvas.create_rectangle(50, y - 8, 66, y + 8, fill=colors[severity], outline="")
-            canvas.create_text(76, y, text=f"{severity}: {severity_counts.get(severity, 0)}", fill="#cfd6e4", anchor="w")
+            y = 346 + idx * 34
+            canvas.create_rectangle(54, y - 8, 72, y + 8, fill=colors[severity], outline="")
+            canvas.create_text(86, y, text=f"{severity.upper()}  {severity_counts.get(severity, 0)}", fill=THEME["text"], anchor="w", font=("Segoe UI", 10, "bold"))
+            canvas.create_line(184, y, left_w - 34, y, fill=THEME["line"])
 
-        canvas.create_text(390, 92, text="Findings by Category", fill="#e5e7eb", anchor="w", font=("Segoe UI", 12, "bold"))
-        top_categories = category_counts.most_common(10)
+        route_mid = (mid_x0 + mid_x1) // 2
+        route_points = [
+            (mid_x0 + 58, panel_bottom - 82),
+            (mid_x0 + 122, panel_bottom - 158),
+            (route_mid - 38, panel_top + 226),
+            (route_mid + 62, panel_top + 150),
+            (mid_x1 - 72, panel_top + 86),
+        ]
+        for idx in range(len(route_points) - 1):
+            canvas.create_line(*route_points[idx], *route_points[idx + 1], fill=THEME["route"], width=3)
+        for idx, (x, y) in enumerate(route_points, start=1):
+            fill = THEME["accent_3"] if idx == len(route_points) else THEME["accent"]
+            canvas.create_oval(x - 8, y - 8, x + 8, y + 8, fill=fill, outline=THEME["text"])
+            canvas.create_text(x, y - 22, text=f"0{idx}", fill=THEME["muted"], font=("Segoe UI", 8, "bold"))
+        canvas.create_text(route_mid, panel_top + 54, text="AUTHORIZED ATTACK SURFACE", fill=THEME["text"], font=("Segoe UI", 15, "bold"))
+        canvas.create_text(route_mid, panel_top + 80, text=f"{len(self.scope.scope)} scoped assets | {len(category_counts)} active evidence categories", fill=THEME["muted"], font=("Segoe UI", 10))
+        self._draw_mini_phoenix(canvas, route_mid, panel_top + 250, scale=1.55)
+        canvas.create_text(route_mid, panel_bottom - 42, text="Scope -> Intel -> Validation -> Evidence -> Report", fill=THEME["accent"], font=("Segoe UI", 10, "bold"))
+
+        top_categories = category_counts.most_common(9)
         max_count = max([count for name, count in top_categories] or [1])
+        rx0 = width - right_w + 28
+        rx1 = width - 54
+        canvas.create_text(rx0, panel_top + 58, text="CATEGORY SIGNALS", fill=THEME["text"], anchor="w", font=("Segoe UI", 12, "bold"))
+        if not top_categories:
+            canvas.create_text(rx0, panel_top + 104, text="No findings yet. Run a scoped audit to populate this panel.", fill=THEME["muted"], anchor="w", width=right_w - 56, font=("Segoe UI", 10))
         for idx, (name, count) in enumerate(top_categories):
-            y = 125 + idx * 34
-            bar_width = int(420 * count / max_count)
-            canvas.create_text(390, y, text=name[:34], fill="#cfd6e4", anchor="w")
-            canvas.create_rectangle(610, y - 10, 610 + bar_width, y + 10, fill="#60a5fa", outline="")
-            canvas.create_text(620 + bar_width, y, text=str(count), fill="#f6f7fb", anchor="w")
+            y = panel_top + 98 + idx * 34
+            canvas.create_text(rx0, y, text=name[:28], fill=THEME["muted"], anchor="w", font=("Segoe UI", 9, "bold"))
+            bar_x = rx0 + 142
+            bar_w = max(8, int((rx1 - bar_x - 34) * count / max_count))
+            canvas.create_rectangle(bar_x, y - 8, rx1 - 34, y + 8, fill=THEME["field"], outline=THEME["line"])
+            canvas.create_rectangle(bar_x, y - 8, bar_x + bar_w, y + 8, fill=THEME["accent_2"], outline="")
+            canvas.create_text(rx1 - 18, y, text=str(count), fill=THEME["text"], anchor="e", font=("Segoe UI", 9, "bold"))
 
-        money = monetary_estimate(self.findings)
-        canvas.create_text(390, 500, text="Monetary Readiness", fill="#e5e7eb", anchor="w", font=("Segoe UI", 12, "bold"))
-        canvas.create_text(390, 528, text=f"Bounty band: {money['bounty_band']}", fill="#cfd6e4", anchor="w", width=width - 420)
-        canvas.create_text(390, 554, text=f"Remediation: {money['remediation_cost']}", fill="#cfd6e4", anchor="w", width=width - 420)
+        y0 = panel_bottom - 112
+        canvas.create_line(rx0, y0 - 20, rx1, y0 - 20, fill=THEME["line"])
+        canvas.create_text(rx0, y0, text="MONETARY READINESS", fill=THEME["accent_3"], anchor="w", font=("Segoe UI", 10, "bold"))
+        canvas.create_text(rx0, y0 + 30, text=f"Bounty band: {money['bounty_band']}", fill=THEME["text"], anchor="w", width=right_w - 56, font=("Segoe UI", 10))
+        canvas.create_text(rx0, y0 + 58, text=f"Remediation: {money['remediation_cost']}", fill=THEME["muted"], anchor="w", width=right_w - 56, font=("Segoe UI", 9))
 
     def _clear_findings(self):
         if not messagebox.askyesno(APP_NAME, "Clear current in-memory findings?"):
