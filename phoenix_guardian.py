@@ -37,6 +37,7 @@ GROQ_API_BASE = "https://api.groq.com/openai/v1"
 GROQ_DEFAULT_MODEL = "llama-3.3-70b-versatile"
 CISA_KEV_JSON_URL = "https://www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json"
 NVD_CVE_API_URL = "https://services.nvd.nist.gov/rest/json/cves/2.0"
+CVE_2026_START = "2026-01-01T00:00:00.000"
 
 THEME = {
     "bg": "#080a0f",
@@ -906,6 +907,107 @@ def current_vectors_report(query="", target="", days=14):
         "Professional boundary",
         "- Use this as a current research queue for authorized assets only.",
         "- Phoenix Guardian summarizes vectors, evidence goals, and safe validation paths; it does not run credential theft, rogue access point, exploit delivery, persistence, or destructive tests.",
+    ])
+    return "\n".join(lines)
+
+
+def cve_2026_report(query="", max_pages=3, results_per_page=200):
+    today = dt.datetime.utcnow()
+    end = min(today, dt.datetime(2026, 12, 31, 23, 59, 59))
+    topic = query.strip()[:120]
+    max_pages = max(1, min(int(max_pages or 3), 10))
+    results_per_page = max(20, min(int(results_per_page or 200), 2000))
+    lines = [
+        "Phoenix Guardian 2026 CVE and Vector Intelligence",
+        f"Generated: {dt.datetime.now().isoformat(timespec='seconds')}",
+        f"NVD publication window: {CVE_2026_START} to {end.strftime('%Y-%m-%dT%H:%M:%S.000')}",
+        f"Topic filter: {topic or 'none - broad 2026 CVE pull'}",
+        "",
+        "Sources",
+        f"- NVD CVE API 2.0: {NVD_CVE_API_URL}",
+        f"- CISA Known Exploited Vulnerabilities: {CISA_KEV_JSON_URL}",
+        "",
+        "CISA KEV entries added in 2026",
+    ]
+
+    try:
+        status, kev = fetch_json_url(CISA_KEV_JSON_URL, timeout=20, limit=8000000)
+        vulns = kev.get("vulnerabilities", []) if isinstance(kev, dict) else []
+        entries = [item for item in vulns if str(item.get("dateAdded", "")).startswith("2026")]
+        entries = sorted(entries, key=lambda item: item.get("dateAdded", ""), reverse=True)
+        lines.append(f"- HTTP {status}; {len(entries)} KEV catalog entries added in 2026.")
+        for item in entries[:40]:
+            lines.append(
+                f"- {item.get('cveID', 'CVE-unknown')} | {item.get('vendorProject', 'unknown')} "
+                f"{item.get('product', '')} | added {item.get('dateAdded', 'unknown')} | due {item.get('dueDate', 'unknown')}"
+            )
+            name = item.get("vulnerabilityName") or item.get("shortDescription") or ""
+            if name:
+                lines.append(f"  Focus: {name[:240]}")
+        if len(entries) > 40:
+            lines.append(f"- ... {len(entries) - 40} more 2026 KEV entries not expanded in this view.")
+    except Exception as exc:
+        lines.append(f"- CISA KEV fetch failed: {exc}")
+
+    lines.extend(["", "NVD 2026 CVEs"])
+    total_results = None
+    collected = []
+    try:
+        for page in range(max_pages):
+            params = {
+                "pubStartDate": CVE_2026_START,
+                "pubEndDate": end.strftime("%Y-%m-%dT%H:%M:%S.000"),
+                "resultsPerPage": str(results_per_page),
+                "startIndex": str(page * results_per_page),
+            }
+            if topic:
+                params["keywordSearch"] = topic
+            status, nvd = fetch_json_url(NVD_CVE_API_URL + "?" + urlencode(params), timeout=35, limit=16000000)
+            records = nvd.get("vulnerabilities", []) if isinstance(nvd, dict) else []
+            total_results = nvd.get("totalResults", total_results) if isinstance(nvd, dict) else total_results
+            collected.extend(records)
+            if not records or len(collected) >= int(total_results or 0):
+                break
+        lines.append(f"- Retrieved {len(collected)} CVE records from NVD; reported totalResults={total_results if total_results is not None else 'unknown'}.")
+        if total_results and len(collected) < int(total_results):
+            lines.append(f"- Output is paged for responsiveness. Increase max_pages/results_per_page in code or repeat with a narrower keyword to enumerate more records.")
+        severity_counts = {}
+        newest = []
+        for item in collected:
+            cve = item.get("cve", {})
+            metrics = cve.get("metrics", {})
+            severity = "unknown"
+            score = ""
+            for key in ("cvssMetricV40", "cvssMetricV31", "cvssMetricV30", "cvssMetricV2"):
+                if metrics.get(key):
+                    data = metrics[key][0].get("cvssData", {})
+                    severity = data.get("baseSeverity", metrics[key][0].get("baseSeverity", severity))
+                    score = str(data.get("baseScore", ""))
+                    break
+            severity_counts[severity] = severity_counts.get(severity, 0) + 1
+            newest.append((cve.get("published", ""), cve, severity, score))
+        lines.append(f"- Severity mix in retrieved batch: {', '.join(f'{key}={value}' for key, value in sorted(severity_counts.items())) or 'none'}")
+        newest.sort(key=lambda item: item[0], reverse=True)
+        lines.append("")
+        lines.append("Newest retrieved 2026 CVEs")
+        for published, cve, severity, score in newest[:80]:
+            cve_id = cve.get("id", "CVE-unknown")
+            descriptions = cve.get("descriptions", [])
+            summary = next((entry.get("value", "") for entry in descriptions if entry.get("lang") == "en"), "")
+            lines.append(f"- {cve_id} | {severity}{f' {score}' if score else ''} | published {published or 'unknown'}")
+            if summary:
+                lines.append(f"  Summary: {summary[:260]}")
+        if len(newest) > 80:
+            lines.append(f"- ... {len(newest) - 80} more retrieved 2026 CVEs retained in the batch but not expanded in this view.")
+    except Exception as exc:
+        lines.append(f"- NVD 2026 CVE fetch failed: {exc}")
+
+    lines.extend([
+        "",
+        "2026 validation priorities",
+        "- Start with 2026 KEV items, critical/high CVSS records, internet-facing software, identity/authentication components, VPN/edge devices, API frameworks, CI/CD, container/cloud control planes, and widely deployed CMS/plugins.",
+        "- For bug bounty, map every CVE to explicit in-scope assets, program rules, version evidence, non-destructive proof, impact, and remediation.",
+        "- Do not run exploit delivery or credential attacks from this feed. Use it for authorized prioritization, safe evidence collection, and report drafting.",
     ])
     return "\n".join(lines)
 
@@ -2840,8 +2942,9 @@ class PhoenixGuardian(tk.Tk):
         ttk.Label(top, text="Intel topic").grid(row=0, column=0, sticky="w")
         ttk.Entry(top, textvariable=self.current_vector_query).grid(row=0, column=1, sticky="ew", padx=(8, 8))
         ttk.Button(top, text="Refresh Live Vectors", command=self._run_current_vectors).grid(row=0, column=2)
-        ttk.Button(top, text="Scope Burst", command=self._run_scope_vector_burst).grid(row=0, column=3, padx=(8, 0))
-        ttk.Checkbutton(top, text="Feed Groq every chat", variable=self.auto_web_intel).grid(row=0, column=4, padx=(12, 0))
+        ttk.Button(top, text="2026 CVEs", command=self._run_2026_cves).grid(row=0, column=3, padx=(8, 0))
+        ttk.Button(top, text="Scope Burst", command=self._run_scope_vector_burst).grid(row=0, column=4, padx=(8, 0))
+        ttk.Checkbutton(top, text="Feed Groq every chat", variable=self.auto_web_intel).grid(row=0, column=5, padx=(12, 0))
 
         board = ttk.Frame(self.vectors_tab)
         board.grid(row=1, column=0, sticky="ew", pady=(12, 0))
@@ -2849,7 +2952,7 @@ class PhoenixGuardian(tk.Tk):
             board.columnconfigure(col, weight=1)
         cards = [
             ("CISA KEV", "Known exploited vulnerabilities and remediation deadlines."),
-            ("NVD CVEs", "Recently published CVEs for target technologies and bug bounty topics."),
+            ("NVD 2026 CVEs", "Paged 2026 CVE intelligence for target technologies and bug bounty topics."),
             ("OWASP", "Web/API testing categories mapped into safe validation evidence."),
             ("HackerOne", "Policy-aware report drafting and scope confirmation."),
         ]
@@ -4006,6 +4109,25 @@ class PhoenixGuardian(tk.Tk):
             remediation="Use this intelligence to prioritize in-scope evidence collection and remediation guidance.",
         )
         self.work_queue.put(("vectors", target or query or "Current vectors", [finding], [report]))
+
+    def _run_2026_cves(self):
+        query = self.current_vector_query.get().strip()
+        self.vectors_output.delete("1.0", tk.END)
+        self.vectors_output.insert(tk.END, f"Fetching 2026 CVE intelligence for {query or 'all 2026 CVEs'}...\n")
+        self.status_text.set("Fetching 2026 CVE intelligence")
+        threading.Thread(target=self._cve_2026_worker, args=(query,), daemon=True).start()
+
+    def _cve_2026_worker(self, query):
+        report = cve_2026_report(query=query, max_pages=3, results_per_page=200)
+        finding = Finding(
+            target=query or "2026 CVE intelligence",
+            category="Current Vectors",
+            severity="Info",
+            title="2026 CVE intelligence refreshed",
+            detail="Pulled paged 2026 CVE records from NVD and correlated 2026 CISA KEV entries for prioritization.",
+            remediation="Use this intelligence only for authorized scope mapping, safe evidence collection, and report drafting.",
+        )
+        self.work_queue.put(("vectors", query or "2026 CVEs", [finding], [report]))
 
     def _run_scope_vector_burst(self):
         targets = list(self.scope.scope)[:5]

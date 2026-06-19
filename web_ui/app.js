@@ -257,6 +257,9 @@ function updateKpis(status) {
   scopeCount.textContent = status.scopeCount;
   riskCount.textContent = high;
   evidenceQuality.textContent = total ? `${Math.min(98, 70 + total * 4)}%` : "Ready";
+  if (status.groqConfigured) {
+    groqKeyInput.placeholder = "Saved local Groq key is active";
+  }
   donutTotal.textContent = String(total);
   const highPct = total ? Math.round((high / total) * 100) : 0;
   const medPct = total ? Math.round((med / total) * 100) : 0;

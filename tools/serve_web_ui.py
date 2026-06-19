@@ -340,6 +340,7 @@ class PhoenixWebHandler(http.server.SimpleHTTPRequestHandler):
             "scope": list(scope.scope),
             "scopeCount": len(scope.scope),
             "findingsCount": len(snapshot),
+            "groqConfigured": bool(engine.load_local_secret("GROQ_API_KEY")),
             "severity": severity,
             "categories": category,
             "guardrails": {
