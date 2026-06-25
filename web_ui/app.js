@@ -259,6 +259,9 @@ function updateKpis(status) {
   evidenceQuality.textContent = total ? `${Math.min(98, 70 + total * 4)}%` : "Ready";
   if (status.groqConfigured) {
     groqKeyInput.placeholder = "Saved local Groq key is active";
+    if (!groqModelInput.value.trim()) {
+      groqModelInput.value = "auto";
+    }
   }
   donutTotal.textContent = String(total);
   const highPct = total ? Math.round((high / total) * 100) : 0;
@@ -474,11 +477,11 @@ async function sendChat() {
   const result = await api("/api/groq-chat", {
     method: "POST",
     body: JSON.stringify({
-      message,
-      apiKey: groqKeyInput.value.trim(),
-      model: groqModelInput.value.trim() || "llama-3.1-8b-instant",
-    }),
-  });
+        message,
+        apiKey: groqKeyInput.value.trim(),
+        model: groqModelInput.value.trim() || "auto",
+      }),
+    });
   appendChat("assistant", result.text);
   renderOutput("Groq Command", result.text);
 }

@@ -35,6 +35,13 @@ SECRET_FILE = "phoenix_guardian_secrets.json"
 HACKERONE_API_BASE = "https://api.hackerone.com/v1"
 GROQ_API_BASE = "https://api.groq.com/openai/v1"
 GROQ_DEFAULT_MODEL = "llama-3.3-70b-versatile"
+GROQ_AUTO_MODEL = "auto"
+GROQ_FREE_MODEL_CANDIDATES = (
+    "llama-3.3-70b-versatile",
+    "llama-3.1-8b-instant",
+    "gemma2-9b-it",
+    "openai/gpt-oss-20b",
+)
 CISA_KEV_JSON_URL = "https://www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json"
 NVD_CVE_API_URL = "https://services.nvd.nist.gov/rest/json/cves/2.0"
 CVE_2026_START = "2026-01-01T00:00:00.000"
@@ -1022,17 +1029,82 @@ def automatic_web_context(user_text, scope):
     return report[:9000]
 
 
+def phoenix_local_assistant_response(user_text, context="", reason=""):
+    text = (user_text or "").strip()
+    lowered = text.lower()
+    lines = ["Phoenix Local Assistant is online."]
+    if reason:
+        lines.append(f"Groq fallback reason: {reason}")
+    lines.append("")
+    if contains_blocked_intent(text):
+        lines.extend([
+            "I cannot help with credential theft, token grabbing, license bypass, rogue AP attacks, exploit delivery, stealth, persistence, or guardrail bypasses.",
+            "I can help reframe the task into authorized defensive testing, evidence collection, remediation, or report drafting.",
+            "ACTION: none",
+        ])
+        return "\n".join(lines)
+    if any(word in lowered for word in ("cve", "2026", "vector", "vulnerability", "latest")):
+        lines.extend([
+            "Recommended path: use the Current Vectors or 2026 CVEs action to pull NVD/CISA intelligence, then map each item to an authorized scope asset before testing.",
+            "For bug bounty, capture version evidence, affected endpoint/component, non-destructive proof, impact, and remediation.",
+            "ACTION: current_vectors",
+        ])
+    elif any(word in lowered for word in ("report", "hackerone", "bounty", "submit")):
+        lines.extend([
+            "Recommended path: confirm program scope and rules, run a scoped audit, then draft the report from validated evidence.",
+            "Keep reports draft-first until reviewed; include reproduction steps, impact, evidence, and remediation.",
+            "ACTION: bug_bounty_autopilot",
+        ])
+    elif any(word in lowered for word in ("kali", "tool", "wordlist", "terminal")):
+        lines.extend([
+            "Recommended path: run Kali Inventory or Wordlists to discover local tools, then use guarded WSL commands for defensive or authorized workflows.",
+            "ACTION: kali_inventory",
+        ])
+    elif any(word in lowered for word in ("burp", "proxy", "repeater")):
+        lines.extend([
+            "Recommended path: check Burp status, configure the browser proxy to 127.0.0.1:8080, and manually validate only in-scope evidence.",
+            "ACTION: burp_status",
+        ])
+    else:
+        lines.extend([
+            "I can help with scoped bug bounty planning, defensive triage, report drafting, current CVE/vector review, Kali inventory, Burp readiness, and evidence handling.",
+            "Tell me the authorized target or the report/workflow you want to prepare.",
+            "ACTION: none",
+        ])
+    if context:
+        lines.extend(["", "Current app context:", context[:1200]])
+    return "\n".join(lines)
+
+
+def _groq_completion(api_key, model, payload):
+    request_payload = dict(payload)
+    request_payload["model"] = model
+    request = Request(
+        f"{GROQ_API_BASE}/chat/completions",
+        data=json.dumps(request_payload).encode("utf-8"),
+        headers={
+            "Authorization": f"Bearer {api_key}",
+            "Content-Type": "application/json",
+            "Accept": "application/json",
+            "User-Agent": f"{APP_NAME}/1.0 (Windows; Python urllib; Groq API client)",
+        },
+        method="POST",
+    )
+    with urlopen(request, timeout=45) as response:
+        return json.loads(response.read().decode("utf-8", errors="ignore"))
+
+
 def groq_chat_response(api_key, model, user_text, context="", web_context=""):
     api_key = (api_key or "").strip()
     if not api_key:
-        return "Missing Groq API key. Set GROQ_API_KEY or paste a GroqCloud key in Settings/Groq Command."
+        return phoenix_local_assistant_response(user_text, context=context, reason="No Groq API key is configured.")
     if api_key.startswith("sk-"):
         return "That looks like an OpenAI key. Groq chat needs a GroqCloud API key, usually starting with gsk_. Rotate any key that was pasted into chat."
     if contains_blocked_intent(user_text):
         return "Blocked: this request asks for theft, bypass, credential attacks, piracy, or unsafe exploitation. I can help reframe it as defensive testing or evidence handling."
-    model = (model or GROQ_DEFAULT_MODEL).strip()
+    model = (model or GROQ_AUTO_MODEL).strip()
+    models = list(GROQ_FREE_MODEL_CANDIDATES) if model.lower() in {"", "auto", "free", "groq-free"} else [model]
     payload = {
-        "model": model,
         "messages": [
             {
                 "role": "system",
@@ -1052,37 +1124,29 @@ def groq_chat_response(api_key, model, user_text, context="", web_context=""):
         "temperature": 0.2,
         "max_tokens": 1800,
     }
-    request = Request(
-        f"{GROQ_API_BASE}/chat/completions",
-        data=json.dumps(payload).encode("utf-8"),
-        headers={
-            "Authorization": f"Bearer {api_key}",
-            "Content-Type": "application/json",
-            "Accept": "application/json",
-            "User-Agent": f"{APP_NAME}/1.0 (Windows; Python urllib; Groq API client)",
-        },
-        method="POST",
-    )
-    try:
-        with urlopen(request, timeout=45) as response:
-            body = json.loads(response.read().decode("utf-8", errors="ignore"))
-    except HTTPError as exc:
-        detail = _http_error_detail(exc)
-        if exc.code == 401:
-            next_step = "Check that the value is a valid GroqCloud API key and not an OpenAI key."
-        elif exc.code == 429:
-            next_step = "The Groq project is rate limited or out of quota; wait, reduce frequency, or check Groq billing/limits."
-        elif exc.code in {400, 404}:
-            next_step = f"Check the model name. Current default is {GROQ_DEFAULT_MODEL}."
-        elif exc.code == 403 and "1010" in detail:
-            next_step = "Groq's edge rejected the request fingerprint or network path. Phoenix now sends explicit API headers; if this persists, try a different network/VPN state or check security software blocking api.groq.com."
-        else:
-            next_step = "Review the Groq project permissions, model access, and network path."
-        return f"Groq API request failed (HTTP {exc.code}): {detail}\nNext check: {next_step}"
-    except URLError as exc:
-        return f"Groq API network request failed: {exc}. Confirm this machine can reach api.groq.com."
-    except Exception as exc:
-        return f"Groq API request failed: {exc}"
+    last_error = ""
+    body = {}
+    selected_model = ""
+    for candidate in models:
+        try:
+            body = _groq_completion(api_key, candidate, payload)
+            selected_model = candidate
+            break
+        except HTTPError as exc:
+            detail = _http_error_detail(exc)
+            last_error = f"HTTP {exc.code}: {detail[:420]}"
+            if exc.code == 401:
+                return phoenix_local_assistant_response(user_text, context=context, reason="Groq rejected the API key.")
+            if exc.code not in {400, 403, 404, 429}:
+                break
+        except URLError as exc:
+            last_error = f"Network error: {exc}"
+            break
+        except Exception as exc:
+            last_error = f"{type(exc).__name__}: {exc}"
+            break
+    if not selected_model:
+        return phoenix_local_assistant_response(user_text, context=context, reason=last_error or "Groq did not return a usable model response.")
 
     choices = body.get("choices", [])
     if choices:
@@ -1095,7 +1159,7 @@ def groq_chat_response(api_key, model, user_text, context="", web_context=""):
             text = "\n".join(part for part in parts if part).strip()
             if text:
                 return text
-    return json.dumps(body, indent=2)[:4000]
+    return phoenix_local_assistant_response(user_text, context=context, reason=f"Groq model {selected_model} returned no assistant content.")
 
 
 def hackerone_request(username, token, method, path, payload=None, timeout=30):
@@ -2224,7 +2288,7 @@ class PhoenixGuardian(tk.Tk):
         self.burp_proxy_url = tk.StringVar(value="http://127.0.0.1:8080")
         self.theme_name = tk.StringVar(value="Phoenix HUD")
         self.groq_api_key = tk.StringVar(value=os.environ.get("GROQ_API_KEY", load_local_secret("GROQ_API_KEY")))
-        self.groq_model = tk.StringVar(value=os.environ.get("GROQ_MODEL", GROQ_DEFAULT_MODEL))
+        self.groq_model = tk.StringVar(value=os.environ.get("GROQ_MODEL", GROQ_AUTO_MODEL))
         self.chat_preapprove = tk.BooleanVar(value=False)
         self.browser_url = tk.StringVar(value="https://hackerone.com/shopify?type=team")
         self.project_name = tk.StringVar(value="Shopify Bug Bounty")
@@ -3123,7 +3187,7 @@ class PhoenixGuardian(tk.Tk):
         ttk.Combobox(
             top,
             textvariable=self.groq_model,
-            values=(GROQ_DEFAULT_MODEL, "llama-3.1-8b-instant", "openai/gpt-oss-20b", "openai/gpt-oss-120b"),
+            values=(GROQ_AUTO_MODEL,) + GROQ_FREE_MODEL_CANDIDATES + ("openai/gpt-oss-120b",),
             width=26,
         ).grid(row=0, column=3, padx=(8, 0))
         ttk.Checkbutton(top, text="Pre-approve safe action", variable=self.chat_preapprove).grid(row=0, column=4, padx=(12, 0))

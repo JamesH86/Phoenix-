@@ -287,7 +287,7 @@ class PhoenixWebHandler(http.server.SimpleHTTPRequestHandler):
                     self.write_error_json("Blocked by Phoenix guardrails. Ask for authorized defensive, reporting, or scoped testing help.", status=403)
                     return
                 api_key = str(payload.get("apiKey", "")).strip() or engine.load_local_secret("GROQ_API_KEY")
-                model = str(payload.get("model", "llama-3.1-8b-instant")).strip() or "llama-3.1-8b-instant"
+                model = str(payload.get("model", engine.GROQ_AUTO_MODEL)).strip() or engine.GROQ_AUTO_MODEL
                 context = f"Authorized scope: {', '.join(scope.scope)}"
                 text = engine.groq_chat_response(api_key, model, message, context=context, web_context="")
                 self.write_json({"ok": True, "text": text})

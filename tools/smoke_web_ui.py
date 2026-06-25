@@ -7,14 +7,14 @@ import urllib.request
 BASE_URL = "http://127.0.0.1:8787"
 
 
-def request(path, method="GET", payload=None):
+def request(path, method="GET", payload=None, timeout=45):
     data = None
     headers = {"Content-Type": "application/json"}
     if payload is not None:
         data = json.dumps(payload).encode("utf-8")
     req = urllib.request.Request(BASE_URL + path, data=data, headers=headers, method=method)
     try:
-        with urllib.request.urlopen(req, timeout=30) as response:
+        with urllib.request.urlopen(req, timeout=timeout) as response:
             body = response.read().decode("utf-8")
             return response.status, json.loads(body)
     except urllib.error.HTTPError as exc:
@@ -46,12 +46,15 @@ def main():
         ("POST", "/api/bug-bounty-report", {"target": "example.com"}),
         ("POST", "/api/browser-context", {"url": "https://example.com"}),
         ("POST", "/api/wsl-command", {"command": "echo phoenix-smoke"}),
-        ("POST", "/api/groq-chat", {"message": "hello", "apiKey": "", "model": "llama-3.1-8b-instant"}),
+        ("POST", "/api/groq-chat", {"message": "hello", "apiKey": "", "model": "auto"}),
         ("POST", "/api/fraud-report", {"path": ""}),
         ("POST", "/api/defensive-drone", {"target": "example.com", "fraudPath": ""}),
     ]
     for method, path, payload in checks:
-        assert_ok(path, method=method, payload=payload)
+        try:
+            assert_ok(path, method=method, payload=payload)
+        except Exception as exc:
+            raise AssertionError(f"{method} {path} failed smoke check: {exc}") from exc
 
     status, body = request("/api/web-audit", method="POST", payload={"target": "not-in-scope.invalid"})
     if status != 403 or body.get("ok"):
