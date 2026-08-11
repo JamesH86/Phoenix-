@@ -2,4 +2,4 @@
 # Optional extras:
 SpeechRecognition>=3.10.0
 keyring>=25.0.0
-
+cryptography>=42.0.0  # verifies signed public-store licenses offline

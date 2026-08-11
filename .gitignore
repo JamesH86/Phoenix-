@@ -10,7 +10,10 @@ __pycache__/
 phoenix_guardian_scope.json
 phoenix_guardian_chat_memory.json
 phoenix_guardian_secrets.json
+.phoenix_orchestrator_state/
+.phoenix/
 *.csv
 *.sqlite
 *.db
-
+.vercel
+.env*

@@ -1,0 +1,190 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="dark" />
+    <meta name="theme-color" content="#050816" />
+    <meta
+      name="description"
+      content="Choose a Phoenix Guardian plan and receive verified 30-day access through Square-hosted checkout."
+    />
+    <link rel="icon" href="/assets/phoenix-icon-192.png" />
+    <link rel="stylesheet" href="/styles.css" />
+    <title>Phoenix Guardian — Secure Access</title>
+  </head>
+  <body>
+    <div class="ambient ambient-one" aria-hidden="true"></div>
+    <div class="ambient ambient-two" aria-hidden="true"></div>
+
+    <header class="site-header">
+      <a class="brand" href="#top" aria-label="Phoenix Guardian home">
+        <img src="/assets/phoenix-icon-192.png" alt="" width="42" height="42" />
+        <span>
+          <strong>Phoenix Guardian</strong>
+          <small>Security Operations</small>
+        </span>
+      </a>
+      <div class="environment-pill environment-loading" id="environmentPill" role="status">
+        <span class="status-dot" aria-hidden="true"></span>
+        <span id="environmentLabel">Checking secure checkout</span>
+      </div>
+    </header>
+
+    <main id="top">
+      <section class="hero" aria-labelledby="heroTitle">
+        <div class="hero-copy">
+          <p class="eyebrow">Verified access · Square-hosted checkout</p>
+          <h1 id="heroTitle">Security control.<br /><span>Built to rise.</span></h1>
+          <p class="hero-lede">
+            Choose the operating level that fits your mission. Every paid purchase is re-verified
+            directly with Square before Phoenix issues a signed 30-day license.
+          </p>
+          <div class="hero-actions">
+            <a class="primary-link" href="#plans">Choose your plan</a>
+            <a class="secondary-link" href="#assurance">How verification works</a>
+          </div>
+          <div class="trust-row" aria-label="Purchase protections">
+            <span>Square hosted</span>
+            <span>Exact-price verification</span>
+            <span>Signed 30-day license</span>
+          </div>
+        </div>
+        <div class="brand-visual" aria-label="Phoenix Guardian protect monitor recover branding">
+          <img
+            src="/assets/phoenix-guardian-logo.png"
+            alt="Phoenix Guardian Security Operations — Protect. Monitor. Recover."
+          />
+          <div class="visual-scan" aria-hidden="true"></div>
+        </div>
+      </section>
+
+      <section class="purchase-panel" id="purchasePanel" aria-live="polite" hidden>
+        <div>
+          <p class="panel-kicker" id="purchaseKicker">Purchase status</p>
+          <h2 id="purchaseTitle">Checking your Square payment…</h2>
+          <p id="purchaseMessage">Phoenix is confirming the order and payment directly with Square.</p>
+        </div>
+        <button class="panel-button" id="checkPaymentButton" type="button">Check payment</button>
+      </section>
+
+      <section class="license-panel" id="licensePanel" aria-labelledby="licenseTitle" hidden>
+        <div class="license-heading">
+          <div>
+            <p class="panel-kicker">Verified access</p>
+            <h2 id="licenseTitle">Your signed Phoenix license is ready</h2>
+            <p id="licenseMeta">Keep this token private. It is valid for 30 days from payment.</p>
+          </div>
+          <span class="verified-mark" aria-label="Payment verified">✓</span>
+        </div>
+        <label for="licenseOutput">License token</label>
+        <div class="license-control">
+          <input id="licenseOutput" type="password" readonly autocomplete="off" spellcheck="false" />
+          <button id="toggleLicenseButton" type="button">Show</button>
+          <button id="copyLicenseButton" class="copy-button" type="button">Copy license</button>
+        </div>
+        <p class="private-note">Stored only in this tab. Phoenix never places the token in a URL.</p>
+      </section>
+
+      <section class="plans-section" id="plans" aria-labelledby="plansTitle">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">One verified purchase · 30 days</p>
+            <h2 id="plansTitle">Choose your operating level</h2>
+          </div>
+          <p>
+            The free demo remains available in Phoenix. Paid plans unlock controlled capabilities
+            according to their tier after payment verification.
+          </p>
+        </div>
+
+        <div class="plan-grid">
+          <article class="plan-card">
+            <div class="plan-topline"><span>01</span><span>Independent</span></div>
+            <h3>Solo Researcher</h3>
+            <p class="plan-summary">A focused launchpad for authorized independent research.</p>
+            <p class="price"><span>$</span>50<small>USD / 30 days</small></p>
+            <ul>
+              <li>Personal security workspace</li>
+              <li>Guided reconnaissance controls</li>
+              <li>Local evidence and reporting</li>
+              <li>Researcher workflow presets</li>
+            </ul>
+            <button class="buy-button" type="button" data-tier="solo" disabled>Checking checkout…</button>
+          </article>
+
+          <article class="plan-card plan-featured">
+            <div class="popular-flag">Most popular</div>
+            <div class="plan-topline"><span>02</span><span>Professional</span></div>
+            <h3>Cybersecurity Personnel</h3>
+            <p class="plan-summary">The complete professional control layer for daily operations.</p>
+            <p class="price"><span>$</span>150<small>USD / 30 days</small></p>
+            <ul>
+              <li>Everything in Solo Researcher</li>
+              <li>Bug bounty mission workspace</li>
+              <li>Expanded defensive automation</li>
+              <li>Advanced audit evidence</li>
+            </ul>
+            <button class="buy-button" type="button" data-tier="base" disabled>Checking checkout…</button>
+          </article>
+
+          <article class="plan-card">
+            <div class="plan-topline"><span>03</span><span>Organization</span></div>
+            <h3>Enterprise</h3>
+            <p class="plan-summary">Coordinated oversight for larger authorized environments.</p>
+            <p class="price"><span>$</span>1,000<small>USD / 30 days</small></p>
+            <ul>
+              <li>Everything in Professional</li>
+              <li>Organization-wide policy views</li>
+              <li>Cross-platform fleet coordination</li>
+              <li>Enterprise audit exports</li>
+            </ul>
+            <button class="buy-button" type="button" data-tier="enterprise" disabled>Checking checkout…</button>
+          </article>
+
+          <article class="plan-card plan-government">
+            <div class="plan-topline"><span>04</span><span>Mission</span></div>
+            <h3>Government</h3>
+            <p class="plan-summary">Maximum governance visibility for controlled public-sector use.</p>
+            <p class="price"><span>$</span>1,500<small>USD / 30 days</small></p>
+            <ul>
+              <li>Everything in Enterprise</li>
+              <li>Mission policy profiles</li>
+              <li>High-assurance approval records</li>
+              <li>Expanded compliance evidence</li>
+            </ul>
+            <button class="buy-button" type="button" data-tier="government" disabled>Checking checkout…</button>
+          </article>
+        </div>
+        <p class="checkout-notice" id="checkoutNotice" role="status">
+          Secure checkout availability is being verified.
+        </p>
+      </section>
+
+      <section class="assurance" id="assurance" aria-labelledby="assuranceTitle">
+        <div class="assurance-copy">
+          <p class="eyebrow">Trust, then issue</p>
+          <h2 id="assuranceTitle">Access cannot be unlocked by a browser response.</h2>
+          <p>
+            Phoenix retrieves the Square order, follows it to the payment, and checks the exact tier,
+            location, application, amount, currency, completion status, and refund state. Only then
+            does the gateway sign a license.
+          </p>
+        </div>
+        <ol class="verification-steps">
+          <li><span>1</span><div><strong>Pay on Square</strong><small>No card or bank details touch Phoenix.</small></div></li>
+          <li><span>2</span><div><strong>Verify at the source</strong><small>Order and payment are checked server to server.</small></div></li>
+          <li><span>3</span><div><strong>Sign 30-day access</strong><small>Phoenix receives a verifiable Ed25519 license.</small></div></li>
+        </ol>
+      </section>
+    </main>
+
+    <footer>
+      <span>Phoenix Guardian Security Operations</span>
+      <span>Protect. Monitor. Recover.</span>
+    </footer>
+
+    <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+    <script src="/app.js" defer></script>
+  </body>
+</html>
