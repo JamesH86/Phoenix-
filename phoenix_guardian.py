@@ -27,6 +27,13 @@ from urllib.parse import urlencode
 from urllib.request import Request, urlopen
 import base64
 
+from phoenix_orchestrator import RemediationManager
+from phoenix_enterprise import DEFAULT_PROFILE, EnterpriseProfileError, EnterpriseProfileStore
+from phoenix_kali import inventory as cross_platform_kali_inventory
+from phoenix_kali import prepare_container as prepare_kali_container
+from phoenix_kali import run_registered as run_registered_kali_action
+from phoenix_kali import runtime_status as kali_runtime_status
+
 
 APP_NAME = "Phoenix Guardian"
 DATA_FILE = "phoenix_guardian_scope.json"
@@ -639,7 +646,7 @@ def burp_suite_status():
         "echo '[Burp process]'; pgrep -af 'burp|Burp' || true",
         "echo '[Proxy listener]'; (timeout 2 bash -lc '</dev/tcp/127.0.0.1/8080' && echo '127.0.0.1:8080 open') || echo '127.0.0.1:8080 closed'",
     ]
-    evidence.append(run_wsl_command("; ".join(checks), timeout=20))
+    evidence.append(run_registered_kali_action("; ".join(checks), timeout=20))
     proxy_open = "127.0.0.1:8080 open" in evidence[0]
     findings = [Finding(
         target="Burp Suite",
@@ -719,22 +726,17 @@ def wifi_monitor_snapshot():
 
 
 def kali_tool_inventory(distro="kali-linux"):
-    checks = []
-    for tool in KALI_TOOL_NAMES:
-        safe_tool = shlex.quote(tool)
-        checks.append(
-            f"if command -v {safe_tool} >/dev/null 2>&1; "
-            f"then printf '{tool}: installed: '; command -v {safe_tool}; "
-            f"else printf '{tool}: missing\\n'; fi"
-        )
-    header = (
-        "echo '[WSL]'; "
-        "cat /etc/os-release 2>/dev/null | sed -n 's/^PRETTY_NAME=//p' | tr -d '\"' || true; "
-        "printf 'user: '; id -un; "
-        "echo; echo '[Kali tools]'; "
-    )
-    command = header + "; ".join(checks)
-    return run_wsl_command(command, distro=distro, timeout=30)
+    result = cross_platform_kali_inventory(KALI_TOOL_NAMES, distro=distro)
+    bridge = result.get("bridge", {})
+    header = [
+        "[Phoenix cross-platform Kali bridge]",
+        f"platform: {bridge.get('platform', 'unknown')}",
+        f"provider: {bridge.get('provider', 'unavailable')}",
+        f"runtime: {bridge.get('runtime', 'unavailable')}",
+        f"isolation: {bridge.get('isolation', 'registered read-only inventory only')}",
+        "",
+    ]
+    return "\n".join(header) + result.get("text", "No inventory returned.")
 
 
 def kali_full_tool_inventory(distro="kali-linux"):
@@ -743,7 +745,7 @@ def kali_full_tool_inventory(distro="kali-linux"):
         "echo; echo '[Security-flavored commands]'; "
         "compgen -c | sort -u | grep -Ei 'burp|zap|nmap|masscan|sql|xss|http|dns|ssl|tls|sub|dir|fuzz|ffuf|gobuster|wfuzz|nikto|nuclei|amass|harvest|searchsploit|msf|metasploit|hydra|hash|john|aircrack|wifite|wps|forensic|volatility|ghidra|radare|binwalk|yara' | head -240"
     )
-    return run_wsl_command(command, distro=distro, timeout=30)
+    return run_registered_kali_action(command, distro=distro, timeout=30)
 
 
 def wordlist_catalog(distro="kali-linux"):
@@ -757,7 +759,7 @@ def wordlist_catalog(distro="kali-linux"):
         "echo 'Password lists are cataloged for offline auditing, lab testing, and defensive password-policy review only.'; "
         "echo 'Phoenix Guardian does not use them for credential stuffing, password spraying, or live login attacks.'"
     )
-    return run_wsl_command(command, distro=distro, timeout=35)
+    return run_registered_kali_action(command, distro=distro, timeout=35)
 
 
 def fetch_url_text(url, timeout=12, limit=120000):
@@ -1279,7 +1281,6 @@ def parse_scope_text(text):
             or line.startswith("https://")
             or line.startswith("Android:")
             or line.startswith("iOS:")
-            or line in {"Authentication & ATO", "Other", "Shopify Mobile Applications", "Shopify Third Party Store", "Shopify Third Party Apps", "Shopify Developed Apps"}
         )
         if current is not None and "asset_type" not in current:
             current.setdefault("notes", []).append(line)
@@ -1442,7 +1443,7 @@ def kali_drone_task(task, target, distro="kali-linux"):
         return "\n\n".join(evidence)
     else:
         return "Unknown drone task."
-    return run_wsl_command(command, distro=distro, timeout=60)
+    return run_registered_kali_action(command, distro=distro, timeout=60)
 
 
 def cybersecurity_drone(target, distro="kali-linux"):
@@ -2276,6 +2277,25 @@ class PhoenixGuardian(tk.Tk):
         self.scope = ScopeManager(DATA_FILE)
         self.findings = []
         self.work_queue = queue.Queue()
+        remediation_state = os.path.join(os.path.dirname(phoenix_config_path("remediation-state")), "remediation")
+        self.remediation_manager = RemediationManager(
+            os.path.dirname(os.path.abspath(__file__)),
+            state_root=remediation_state,
+            node_path=shutil.which("node"),
+        )
+        self.enterprise_store = EnterpriseProfileStore(os.path.dirname(phoenix_config_path("enterprise-profile.json")))
+        try:
+            enterprise_profile = self.enterprise_store.load()
+        except EnterpriseProfileError:
+            enterprise_profile = dict(DEFAULT_PROFILE)
+        self.organization_name = tk.StringVar(value=enterprise_profile["organization_name"])
+        self.business_unit = tk.StringVar(value=enterprise_profile["business_unit"])
+        self.enterprise_environment = tk.StringVar(value=enterprise_profile["environment"])
+        self.primary_domain = tk.StringVar(value=enterprise_profile["primary_domain"])
+        self.security_contact = tk.StringVar(value=enterprise_profile["security_contact"])
+        self.asset_owner = tk.StringVar(value=enterprise_profile["asset_owner"])
+        self.maintenance_window = tk.StringVar(value=enterprise_profile["maintenance_window"])
+        self.data_region = tk.StringVar(value=enterprise_profile["data_region"])
         self.status_text = tk.StringVar(value="Ready")
         self.command_target = tk.StringVar(value="")
         self.autonomous_enabled = tk.BooleanVar(value=False)
@@ -2290,18 +2310,18 @@ class PhoenixGuardian(tk.Tk):
         self.groq_api_key = tk.StringVar(value=os.environ.get("GROQ_API_KEY", load_local_secret("GROQ_API_KEY")))
         self.groq_model = tk.StringVar(value=os.environ.get("GROQ_MODEL", GROQ_AUTO_MODEL))
         self.chat_preapprove = tk.BooleanVar(value=False)
-        self.browser_url = tk.StringVar(value="https://hackerone.com/shopify?type=team")
-        self.project_name = tk.StringVar(value="Shopify Bug Bounty")
-        self.project_notes = tk.StringVar(value="Scoped bug bounty workspace")
+        self.browser_url = tk.StringVar(value="")
+        self.project_name = tk.StringVar(value="Enterprise Security Program")
+        self.project_notes = tk.StringVar(value="Scoped enterprise security workspace")
         self.web_search_query = tk.StringVar(value="")
-        self.current_vector_query = tk.StringVar(value="web application API cloud auth bug bounty")
+        self.current_vector_query = tk.StringVar(value="enterprise application API cloud identity security")
         self.wsl_command_text = tk.StringVar(value="pwd && whoami && uname -a")
         self.wsl_distro = tk.StringVar(value=os.environ.get("PHOENIX_WSL_DISTRO", "kali-linux"))
         self.code_lab_query = tk.StringVar(value="secure audit helpers, scripts, SBOM, IaC, LLM app security")
-        self.h1_username = tk.StringVar(value=os.environ.get("HACKERONE_USERNAME", "james1956"))
+        self.h1_username = tk.StringVar(value=os.environ.get("HACKERONE_USERNAME", ""))
         self.h1_token = tk.StringVar(value=os.environ.get("HACKERONE_API_TOKEN", ""))
-        self.h1_program_handle = tk.StringVar(value="shopify")
-        self.h1_researcher_tag = tk.StringVar(value="james1956")
+        self.h1_program_handle = tk.StringVar(value="")
+        self.h1_researcher_tag = tk.StringVar(value="")
         self.h1_scope_limit = tk.IntVar(value=3)
         self.h1_auto_create_intents = tk.BooleanVar(value=True)
         self.h1_last_intent_id = tk.StringVar(value="")
@@ -3059,7 +3079,7 @@ class PhoenixGuardian(tk.Tk):
         ttk.Entry(row, textvariable=self.browser_url).grid(row=0, column=1, sticky="ew", padx=(8, 8))
         ttk.Button(row, text="Open Browser", command=self._open_browser_url).grid(row=0, column=2)
         ttk.Button(row, text="Fetch Context", command=self._fetch_browser_context).grid(row=0, column=3, padx=(8, 0))
-        ttk.Button(row, text="HackerOne Shopify", command=self._browser_shopify).grid(row=0, column=4, padx=(8, 0))
+        ttk.Button(row, text="Program Directory", command=self._open_program_directory).grid(row=0, column=4, padx=(8, 0))
         note = (
             "Browser Bridge links Phoenix to web workflows without adding another crowded browser chrome. "
             "Open HackerOne, fetch public page context, and feed scoped URLs into Current Vectors or Groq."
@@ -3236,6 +3256,7 @@ class PhoenixGuardian(tk.Tk):
         controls.grid(row=0, column=0, sticky="ew")
         ttk.Button(controls, text="Refresh Cockpit", style="Primary.TButton", command=self._refresh_dashboard).grid(row=0, column=0, sticky="w")
         ttk.Label(controls, text="Phoenix HUD: scoped security posture, evidence quality, and mission readiness", style="PanelSubtle.TLabel").grid(row=0, column=1, sticky="w", padx=(12, 0))
+        ttk.Button(controls, text="Protect This App", command=self._protect_this_app).grid(row=0, column=2, sticky="e", padx=(12, 0))
 
         stats = ttk.Frame(self.dashboard_tab)
         stats.grid(row=1, column=0, sticky="ew", pady=(12, 0))
@@ -3386,8 +3407,28 @@ class PhoenixGuardian(tk.Tk):
         ttk.Label(api, text="Full access", style="PanelSubtle.TLabel").grid(row=1, column=5, padx=(4, 6), pady=(10, 0))
         ToggleSwitch(api, self.local_full_access, enabled=True, command=self._toggle_full_access).grid(row=1, column=6, pady=(10, 0))
 
+        enterprise = ttk.LabelFrame(content, text="Enterprise organization profile", padding=10)
+        enterprise.grid(row=3, column=0, sticky="ew", pady=(12, 0))
+        for column in (1, 3):
+            enterprise.columnconfigure(column, weight=1)
+        enterprise_fields = [
+            ("Organization", self.organization_name, "Business unit", self.business_unit),
+            ("Environment", self.enterprise_environment, "Primary domain", self.primary_domain),
+            ("Security contact", self.security_contact, "Asset owner", self.asset_owner),
+            ("Maintenance window", self.maintenance_window, "Data region", self.data_region),
+        ]
+        for row, (left_label, left_var, right_label, right_var) in enumerate(enterprise_fields):
+            ttk.Label(enterprise, text=left_label).grid(row=row, column=0, sticky="w", pady=4)
+            if left_label == "Environment":
+                ttk.Combobox(enterprise, textvariable=left_var, values=("Production", "Staging", "Development", "Mixed"), state="readonly").grid(row=row, column=1, sticky="ew", padx=(8, 18), pady=4)
+            else:
+                ttk.Entry(enterprise, textvariable=left_var).grid(row=row, column=1, sticky="ew", padx=(8, 18), pady=4)
+            ttk.Label(enterprise, text=right_label).grid(row=row, column=2, sticky="w", pady=4)
+            ttk.Entry(enterprise, textvariable=right_var).grid(row=row, column=3, sticky="ew", padx=(8, 0), pady=4)
+        ttk.Button(enterprise, text="Save Enterprise Profile", command=self._save_enterprise_profile).grid(row=4, column=0, columnspan=4, sticky="w", pady=(8, 0))
+
         guard = ttk.LabelFrame(content, text="Guardrails and professional controls", padding=10)
-        guard.grid(row=3, column=0, sticky="ew", pady=(12, 0))
+        guard.grid(row=4, column=0, sticky="ew", pady=(12, 0))
         guard.columnconfigure(0, weight=1)
         for row, (key, label, default, editable, detail) in enumerate(GUARDRAIL_ITEMS):
             item = ttk.Frame(guard, style="Card.TFrame", padding=(12, 9))
@@ -3406,7 +3447,7 @@ class PhoenixGuardian(tk.Tk):
             ttk.Label(item, text=detail, wraplength=860, style="CardSubtle.TLabel").grid(row=1, column=1, columnspan=2, sticky="w", pady=(4, 0))
 
         policy = ttk.LabelFrame(content, text="Tool policy catalog", padding=10)
-        policy.grid(row=4, column=0, sticky="ew", pady=(12, 0))
+        policy.grid(row=5, column=0, sticky="ew", pady=(12, 0))
         self.tool_policy_table = ttk.Treeview(policy, columns=("tool", "use", "status"), show="headings", height=8)
         for column, width in {"tool": 240, "use": 520, "status": 220}.items():
             self.tool_policy_table.heading(column, text=column.title())
@@ -3416,15 +3457,34 @@ class PhoenixGuardian(tk.Tk):
             self.tool_policy_table.insert("", tk.END, values=item)
 
         controls = ttk.Frame(content)
-        controls.grid(row=5, column=0, sticky="w", pady=(12, 0))
+        controls.grid(row=6, column=0, sticky="w", pady=(12, 0))
         ttk.Button(controls, text="Clear Current Findings", command=self._clear_findings).grid(row=0, column=0)
         ttk.Button(controls, text="Clear Scope File", command=self._clear_scope_file).grid(row=0, column=1, padx=(8, 0))
         ttk.Button(controls, text="Redacted Export", command=self._export_redacted_csv).grid(row=0, column=2, padx=(8, 0))
 
         self.privacy_output = tk.Text(content, wrap="word", height=8, bg="#0b1020", fg="#e5e7eb", insertbackground="#e5e7eb")
-        self.privacy_output.grid(row=6, column=0, sticky="nsew", pady=(12, 0))
+        self.privacy_output.grid(row=7, column=0, sticky="nsew", pady=(12, 0))
         self.privacy_output.insert(tk.END, "Settings log is local to this app session.\n")
-        content.rowconfigure(6, weight=1)
+        content.rowconfigure(7, weight=1)
+
+    def _save_enterprise_profile(self):
+        try:
+            profile = self.enterprise_store.save({
+                "organization_name": self.organization_name.get(),
+                "business_unit": self.business_unit.get(),
+                "environment": self.enterprise_environment.get(),
+                "primary_domain": self.primary_domain.get(),
+                "security_contact": self.security_contact.get(),
+                "asset_owner": self.asset_owner.get(),
+                "maintenance_window": self.maintenance_window.get(),
+                "data_region": self.data_region.get(),
+            })
+        except EnterpriseProfileError as exc:
+            messagebox.showerror(APP_NAME, str(exc))
+            return
+        self.organization_name.set(profile["organization_name"])
+        self.privacy_output.insert(tk.END, "Enterprise profile saved privately. Sensitive identifiers remain masked.\n")
+        self.status_text.set(f"Enterprise profile ready for {profile['organization_name']}")
 
     def _add_scope(self):
         added = self.scope.add(self.scope_entry.get())
@@ -3725,9 +3785,8 @@ class PhoenixGuardian(tk.Tk):
         self.work_queue.put(("bounty", f"HackerOne:{handle}", [finding], evidence))
 
     def _import_scope_file(self):
-        default_path = "/mnt/c/Users/f/.codex/attachments/ffd40446-3d7f-4bf2-ab00-7639503531d1/pasted-text.txt"
-        path = default_path if os.path.exists(default_path) else filedialog.askopenfilename(
-            title="Import HackerOne scope text",
+        path = filedialog.askopenfilename(
+            title="Import authorized program scope text",
             filetypes=[("Text", "*.txt"), ("All files", "*.*")],
         )
         if not path:
@@ -3736,9 +3795,6 @@ class PhoenixGuardian(tk.Tk):
             with open(path, "r", encoding="utf-8", errors="ignore") as handle:
                 text = handle.read()
             self.imported_scope_entries = parse_scope_text(text)
-            if "shopify" in text.lower():
-                self.h1_program_handle.set("shopify")
-            self.h1_researcher_tag.set("james1956")
             summary = imported_scope_summary(self.imported_scope_entries)
             self.bounty_output.delete("1.0", tk.END)
             self.bounty_output.insert(tk.END, f"Imported scope file:\n{path}\n\n{summary}")
@@ -3838,7 +3894,7 @@ class PhoenixGuardian(tk.Tk):
             self._import_scope_file()
         if not self.imported_scope_entries:
             return
-        handle = self.h1_program_handle.get().strip() or "shopify"
+        handle = self.h1_program_handle.get().strip() or "imported-program"
         self.bounty_output.delete("1.0", tk.END)
         self.bounty_output.insert(tk.END, f"Running imported-scope bug bounty automation for {handle}...\n")
         self.status_text.set(f"Running imported-scope automation for {handle}")
@@ -3847,7 +3903,7 @@ class PhoenixGuardian(tk.Tk):
     def _imported_scope_automation_worker(self, handle):
         username, token, _ = self._h1_credentials()
         limit = max(1, int(self.h1_scope_limit.get() or 3))
-        researcher_tag = self.h1_researcher_tag.get().strip() or "james1956"
+        researcher_tag = self.h1_researcher_tag.get().strip() or "not provided"
         eligible = []
         for item in self.imported_scope_entries:
             if not item.get("eligible"):
@@ -3855,7 +3911,7 @@ class PhoenixGuardian(tk.Tk):
             if item.get("asset_type") not in {"Domain", "Wildcard"}:
                 continue
             asset = item.get("asset_identifier", "")
-            if not asset or "your-store.myshopify.com" in asset:
+            if not asset:
                 continue
             target = host_for_target(asset.replace("*.", ""))
             if target:
@@ -3904,7 +3960,7 @@ class PhoenixGuardian(tk.Tk):
             severity="Info",
             title="Imported HackerOne scope automation completed",
             detail=f"Processed {min(limit, len(eligible))} eligible imported scope assets and created {len(created_intents)} report intents.",
-            remediation="Review report intent drafts and submit only validated reports that satisfy Shopify/HackerOne rules.",
+            remediation="Review report intent drafts and submit only validated reports that satisfy the enrolled program rules.",
         ))
         self.work_queue.put(("bounty", f"HackerOne:{handle}", findings, evidence))
 
@@ -4124,8 +4180,8 @@ class PhoenixGuardian(tk.Tk):
         webbrowser.open(ensure_url(url))
         self.status_text.set(f"Opened browser URL: {host_for_target(url)}")
 
-    def _browser_shopify(self):
-        self.browser_url.set("https://hackerone.com/shopify?type=team")
+    def _open_program_directory(self):
+        self.browser_url.set("https://hackerone.com/directory/programs")
         self._open_browser_url()
 
     def _fetch_browser_context(self):
@@ -4557,6 +4613,16 @@ class PhoenixGuardian(tk.Tk):
                 elif kind == "autonomous":
                     self.autonomous_output.insert(tk.END, f"{dt.datetime.now().isoformat(timespec='seconds')} cycle complete: {len(findings)} findings.\n")
                     self.autonomous_output.insert(tk.END, "\n\n".join(evidence[-8:]) + "\n")
+                elif kind == "remediation":
+                    result = evidence[0] if evidence else "Phoenix remediation returned no result."
+                    self.autonomous_output.insert(tk.END, f"\n{dt.datetime.now().isoformat(timespec='seconds')} Protect This App\n{result}\n")
+                    if target == "succeeded":
+                        self.dashboard_stats["automation"].configure(text="PROTECTED")
+                        self.status_text.set("Protect This App verified successfully")
+                    else:
+                        self.dashboard_stats["automation"].configure(text="REVIEW")
+                        self.status_text.set(f"Protect This App: {target}")
+                    continue
                 elif kind == "voice":
                     self.voice_listening = False
                     if hasattr(self, "voice_output"):
@@ -4580,6 +4646,36 @@ class PhoenixGuardian(tk.Tk):
         except queue.Empty:
             pass
         self.after(150, self._drain_queue)
+
+    def _protect_this_app(self):
+        current = self.remediation_manager.status()
+        if current.get("active_run_id"):
+            self.status_text.set(f"Protection run already active: {current['active_run_id']}")
+            return
+        self.status_text.set("Protect This App: preflight started")
+        self.dashboard_stats["automation"].configure(text="HEALING")
+        threading.Thread(target=self._protect_this_app_worker, daemon=True).start()
+
+    def _protect_this_app_worker(self):
+        idempotency_key = f"desktop-{dt.datetime.now().strftime('%Y%m%d%H%M%S%f')}"
+        started = self.remediation_manager.start(idempotency_key=idempotency_key, apply=True)
+        if not started.get("ok"):
+            error = started.get("error", {})
+            message = error.get("message", str(error)) if isinstance(error, dict) else str(error)
+            self.work_queue.put(("remediation", "failed", [], [message]))
+            return
+        result = self.remediation_manager.wait(started["run_id"], timeout=120)
+        report = result.get("report") or {}
+        action = (result.get("plan") or {}).get("planned_action", {}).get("type", "report_only")
+        summary = report.get("summary") if isinstance(report, dict) else ""
+        message = (
+            f"Run: {result.get('run_id')}\n"
+            f"Status: {result.get('status')}\n"
+            f"Action: {action}\n"
+            f"Verification healthy: {bool((result.get('verification') or {}).get('healthy'))}\n"
+            f"{summary or 'Known-good snapshot and verification audit recorded.'}"
+        )
+        self.work_queue.put(("remediation", result.get("status", "failed"), [], [message]))
 
     def _write_result(self, widget, target, findings, evidence):
         widget.delete("1.0", tk.END)
@@ -4891,7 +4987,7 @@ class PhoenixGuardian(tk.Tk):
         elif "load key" in command:
             self._load_groq_key()
         elif "browser" in command or "hackerone" in command:
-            self._browser_shopify() if "shopify" in command or "hackerone" in command else self._open_browser_url()
+            self._open_program_directory() if "hackerone" in command else self._open_browser_url()
         elif "current vector" in command or "live vector" in command or "intel" in command:
             self._run_current_vectors()
         elif "code lab" in command or "language inventory" in command:
