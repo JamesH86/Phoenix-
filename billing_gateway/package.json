@@ -1,0 +1,16 @@
+{
+  "name": "phoenix-square-billing-gateway",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "build": "node scripts/validate-static.js",
+    "test": "node --test",
+    "check": "node --check api/*.js && node --check lib/*.js && node --check scripts/*.js",
+    "generate:keys": "node scripts/generate-secrets.js",
+    "configure:sandbox-webhook": "node scripts/configure-square-sandbox-webhook.js"
+  }
+}
