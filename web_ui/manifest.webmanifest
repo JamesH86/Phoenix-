@@ -1,0 +1,43 @@
+{
+  "name": "Phoenix Guardian Security Operations",
+  "short_name": "Phoenix",
+  "description": "Private, cross-platform defensive security operations with scoped audits and verified remediation.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#050807",
+  "theme_color": "#050807",
+  "orientation": "any",
+  "categories": ["security", "business", "utilities"],
+  "icons": [
+    {
+      "src": "./assets/phoenix-icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "./assets/phoenix-icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Command Center",
+      "short_name": "Command",
+      "url": "./?panel=command"
+    },
+    {
+      "name": "Bug Bounty Lab",
+      "short_name": "Bug Bounty",
+      "url": "./?panel=bug-bounty"
+    },
+    {
+      "name": "Platform Operations",
+      "short_name": "Operations",
+      "url": "./?panel=operations"
+    }
+  ]
+}

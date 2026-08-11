@@ -3,23 +3,35 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#050807" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Phoenix" />
     <title>Phoenix Guardian Web HUD</title>
+    <link rel="manifest" href="./manifest.webmanifest" />
+    <link rel="apple-touch-icon" href="./assets/phoenix-icon-192.png" />
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 80 80'%3E%3Cpath fill='%23fb923c' stroke='%2322d3ee' stroke-width='4' d='M40 6c6 12 12 22 26 31-11 0-18 4-21 12l-5 21-5-21c-3-8-10-12-21-12C28 28 34 18 40 6Z'/%3E%3C/svg%3E" />
-    <link rel="stylesheet" href="./styles.css" />
+    <link rel="stylesheet" href="./styles.css?v=5" />
   </head>
   <body>
+    <section class="duplicate-tab-banner" id="duplicate-tab-banner" hidden aria-live="assertive">
+      <div>
+        <span class="eyebrow">Single operator protection</span>
+        <strong>Phoenix Guardian is already active in another tab.</strong>
+        <p>This tab is read-only so a second click cannot start a duplicate remediation run.</p>
+        <button id="duplicate-tab-retry" type="button">Try becoming primary</button>
+      </div>
+    </section>
     <div class="app-shell">
       <aside class="sidebar" aria-label="Phoenix Guardian navigation">
         <div class="brand">
           <div class="brand-mark" aria-hidden="true">
-            <svg viewBox="0 0 80 80" role="img">
-              <path d="M40 6c6 12 12 22 26 31-11 0-18 4-21 12l-5 21-5-21c-3-8-10-12-21-12C28 28 34 18 40 6Z" />
-              <path d="M16 31c9-18 22-21 24-21M64 31C55 13 42 10 40 10" />
-            </svg>
+            <span>P</span>
           </div>
           <div>
             <strong>Phoenix</strong>
-            <span>Guardian</span>
+            <span>Autonomous Defense</span>
           </div>
         </div>
 
@@ -29,70 +41,132 @@
           <button class="nav-item" data-panel="intelligence">Intelligence</button>
           <button class="nav-item" data-panel="operations">Operations</button>
           <button class="nav-item" data-panel="reports">Reports</button>
+          <button class="nav-item" data-panel="plans">Plans</button>
           <button class="nav-item" data-panel="settings">Settings</button>
         </nav>
 
         <section class="side-card">
-          <span class="eyebrow">System State</span>
-          <strong id="system-state">Ready</strong>
-          <p>Local-first security cockpit with scoped audit guardrails.</p>
+          <span class="eyebrow">Active Access</span>
+          <strong id="active-tier-side">Owner</strong>
+          <p id="organization-name-display">Your Organization</p>
+          <p id="tier-expiry-side">Monthly control key active</p>
+          <div class="side-status"><i></i><span id="system-state">Ready</span></div>
         </section>
       </aside>
 
       <main class="workspace">
         <header class="topbar">
-          <div>
-            <p class="eyebrow">Phoenix Guardian Web Shell</p>
-            <h1>Cybersecurity Operations Cockpit</h1>
+          <div class="hero-copy">
+            <div class="tier-pill"><span id="active-tier-badge">Phoenix Owner</span><i>Active</i></div>
+            <p class="eyebrow">Autonomous security operations</p>
+            <h1>Defend every enrolled asset from one command surface.</h1>
+            <p class="hero-subtitle">Continuous posture checks, bounded remediation, verified recovery, and clear controls for every subscription level.</p>
           </div>
-          <div class="command-strip" role="search">
-            <label for="target-input">Target</label>
-            <input id="target-input" value="example.com" />
-            <button id="add-scope">Add Scope</button>
-            <button id="run-scan">Run Audit</button>
+          <figure class="hero-brand-art">
+            <img src="./assets/phoenix-guardian-logo.png" alt="Phoenix Guardian Security Operations — Protect, Monitor, Recover" />
+          </figure>
+          <div class="command-strip" role="search" aria-label="Asset command bar">
+            <div class="target-field">
+              <label for="target-input">Authorized target</label>
+              <input id="target-input" value="" placeholder="portal.company.example" autocomplete="off" />
+            </div>
+            <div class="command-actions">
+              <button id="add-scope">Add to Scope</button>
+              <button id="run-scan">Run Audit</button>
+              <button id="protect-system" class="primary-protect">Authorize &amp; Protect</button>
+            </div>
           </div>
         </header>
+
+        <section class="tier-ribbon" aria-label="Phoenix subscription tiers">
+          <button type="button" data-tier-shortcut="demo"><span>Demo</span><strong>Free</strong><small>Explore safely</small></button>
+          <button type="button" data-tier-shortcut="solo"><span>Solo</span><strong>$50</strong><small>per month</small></button>
+          <button type="button" data-tier-shortcut="base"><span>Base</span><strong>$150</strong><small>per month</small></button>
+          <button type="button" data-tier-shortcut="enterprise"><span>Enterprise</span><strong>$1,000</strong><small>per month</small></button>
+          <button type="button" data-tier-shortcut="government"><span>Government</span><strong>$1,500</strong><small>per month</small></button>
+        </section>
 
         <section class="control-deck" id="control-deck" aria-label="Phoenix tab controls">
           <label data-control="query">
             <span>Research Query</span>
-            <input id="query-input" value="web application API cloud auth bug bounty" />
+            <input id="query-input" value="enterprise application API cloud identity security" />
           </label>
           <label data-control="browser">
             <span>Browser URL</span>
-            <input id="browser-input" value="https://example.com" />
+            <input id="browser-input" value="" placeholder="https://approved.company.example/policy" autocomplete="off" />
           </label>
           <label data-control="distro">
             <span>WSL Distro</span>
             <input id="distro-input" value="kali-linux" />
           </label>
-          <label data-control="wsl">
-            <span>WSL Command</span>
-            <input id="wsl-input" value="uname -a && command -v nmap || true" />
-          </label>
           <label data-control="fraud">
-            <span>Fraud CSV Path</span>
-            <input id="fraud-input" placeholder="C:\\path\\transactions.csv" />
+            <span>Fraud CSV Import</span>
+            <input id="fraud-input" type="file" accept=".csv,text/csv" />
+          </label>
+          <label data-control="research-notes">
+            <span>Private Asset Notebook</span>
+            <textarea id="research-notes-input" rows="3" maxlength="4000" placeholder="Owned lab assets and learning notes only — never paste passwords or tokens"></textarea>
           </label>
           <label data-control="groq-key">
             <span>Groq Key</span>
             <input id="groq-key-input" type="password" autocomplete="off" placeholder="Stored locally or paste for this session" />
+          </label>
+          <label data-control="control-key">
+            <span>Monthly Phoenix Control Key</span>
+            <input id="control-key-input" type="password" autocomplete="off" placeholder="phx_demo_, phx_solo_, phx_base_, phx_enterprise_, or phx_government_" />
           </label>
           <label data-control="groq-model">
             <span>Groq Model</span>
             <input id="groq-model-input" value="auto" />
           </label>
           <label data-control="hackerone">
-            <span>HackerOne Handle</span>
-            <input id="hackerone-handle-input" value="shopify" />
+            <span>External Program Handle (optional)</span>
+            <input id="hackerone-handle-input" value="" placeholder="approved-program" autocomplete="off" />
+          </label>
+          <label data-control="organization-name">
+            <span>Organization Name</span>
+            <input id="organization-name-input" value="Your Organization" autocomplete="organization" />
+          </label>
+          <label data-control="business-unit">
+            <span>Business Unit</span>
+            <input id="business-unit-input" value="Security Operations" />
+          </label>
+          <label data-control="environment">
+            <span>Environment</span>
+            <select id="environment-input">
+              <option>Production</option>
+              <option>Staging</option>
+              <option>Development</option>
+              <option>Mixed</option>
+            </select>
+          </label>
+          <label data-control="primary-domain">
+            <span>Primary Domain</span>
+            <input id="primary-domain-input" value="" placeholder="company.example" autocomplete="off" />
+          </label>
+          <label data-control="security-contact">
+            <span>Security Contact</span>
+            <input id="security-contact-input" type="email" value="" placeholder="security@company.example" autocomplete="email" />
+          </label>
+          <label data-control="asset-owner">
+            <span>Asset Owner</span>
+            <input id="asset-owner-input" value="" placeholder="Platform Security" />
+          </label>
+          <label data-control="maintenance-window">
+            <span>Maintenance Window</span>
+            <input id="maintenance-window-input" value="Organization policy" />
+          </label>
+          <label data-control="data-region">
+            <span>Data Region</span>
+            <input id="data-region-input" value="Local" />
           </label>
         </section>
 
         <section class="mission-grid" aria-label="Mission KPIs">
           <article class="metric-card">
             <span>Scope Assets</span>
-            <strong id="scope-count">12</strong>
-            <small>3 high-priority programs</small>
+            <strong id="scope-count">—</strong>
+            <small>Explicitly enrolled assets only</small>
           </article>
           <article class="metric-card">
             <span>Evidence Quality</span>
@@ -101,13 +175,13 @@
           </article>
           <article class="metric-card warning">
             <span>High Risk</span>
-            <strong id="risk-count">4</strong>
+            <strong id="risk-count">—</strong>
             <small>Needs validation</small>
           </article>
           <article class="metric-card">
             <span>Automation</span>
             <strong id="automation-state">Idle</strong>
-            <small>Safe actions queued</small>
+            <small id="tier-term-label">Safe actions queued</small>
           </article>
         </section>
 
@@ -115,7 +189,7 @@
           <article class="hud-panel route-panel">
             <div class="panel-heading">
               <span class="eyebrow">Mission Route</span>
-              <strong>Scope to Report Pipeline</strong>
+              <strong>Authorize to Verify Pipeline</strong>
             </div>
             <div class="route-map" aria-hidden="true">
               <svg viewBox="0 0 760 380">
@@ -134,11 +208,12 @@
                   </filter>
                 </defs>
                 <path class="city-grid" d="M20 320h720M20 260h720M20 200h720M20 140h720M120 40v320M260 40v320M400 40v320M540 40v320M680 40v320" />
-                <path class="route-line" d="M72 308 C160 240, 198 252, 270 184 S420 102, 512 142 S625 222, 704 78" />
-                <g class="route-node"><circle cx="72" cy="308" r="12" /><text x="72" y="344">Scope</text></g>
-                <g class="route-node"><circle cx="270" cy="184" r="12" /><text x="270" y="220">Intel</text></g>
-                <g class="route-node"><circle cx="512" cy="142" r="12" /><text x="512" y="178">Validate</text></g>
-                <g class="route-node final"><circle cx="704" cy="78" r="15" /><text x="704" y="116">Report</text></g>
+                <path class="route-line" d="M72 308 C138 252, 175 252, 222 218 S320 150, 388 164 S495 174, 548 124 S646 105, 704 78" />
+                <g class="route-node"><circle cx="72" cy="308" r="12" /><text x="72" y="344">Authorize</text></g>
+                <g class="route-node"><circle cx="222" cy="218" r="12" /><text x="222" y="254">Assess</text></g>
+                <g class="route-node"><circle cx="388" cy="164" r="12" /><text x="388" y="200">Snapshot</text></g>
+                <g class="route-node"><circle cx="548" cy="124" r="12" /><text x="548" y="160">Heal</text></g>
+                <g class="route-node final"><circle cx="704" cy="78" r="15" /><text x="704" y="116">Verify</text></g>
               </svg>
             </div>
           </article>
@@ -151,15 +226,15 @@
             <div class="donut-wrap">
               <div class="donut" id="severity-donut" aria-label="Severity chart"></div>
               <div class="donut-center">
-                <strong id="donut-total">0</strong>
+                <strong id="donut-total">None</strong>
                 <span>signals</span>
               </div>
             </div>
             <ul class="legend" id="severity-legend">
-              <li><span class="dot high"></span>High <strong>0</strong></li>
-              <li><span class="dot med"></span>Medium <strong>0</strong></li>
-              <li><span class="dot low"></span>Low <strong>0</strong></li>
-              <li><span class="dot info"></span>Info <strong>0</strong></li>
+              <li><span class="dot high"></span>High <strong>None</strong></li>
+              <li><span class="dot med"></span>Medium <strong>None</strong></li>
+              <li><span class="dot low"></span>Low <strong>None</strong></li>
+              <li><span class="dot info"></span>Info <strong>None</strong></li>
             </ul>
           </article>
 
@@ -169,14 +244,15 @@
               <strong id="panel-title">Operational Overview</strong>
               <small id="panel-subtitle">Live local backend actions.</small>
             </div>
+            <div class="plan-lock-banner" id="plan-lock-banner" hidden></div>
             <div class="action-bar" id="action-bar" aria-label="Phoenix actions"></div>
-            <div class="signal-list" id="signal-list"></div>
+            <div class="signal-list" id="signal-list" aria-live="polite" aria-atomic="true"></div>
           </article>
 
           <article class="hud-panel chat-panel">
             <div class="panel-heading">
               <span class="eyebrow">Phoenix Chat</span>
-              <strong>Groq Command Assistant</strong>
+              <strong>Phoenix AI · Free Local / Optional Groq</strong>
             </div>
             <div id="chat-output" class="chat-output" aria-live="polite">
               <div class="chat-message assistant">Phoenix chat is ready. Ask for scoped testing help, report drafting, defensive triage, or operational guidance.</div>
@@ -190,17 +266,19 @@
           <article class="hud-panel terminal-panel">
             <div class="panel-heading">
               <span class="eyebrow">Local Bridge</span>
-              <strong>Kali / WSL / Groq</strong>
+              <strong>Verified Local Control</strong>
             </div>
             <pre id="terminal-output">$ phoenix status
 guardrails: locked
 scope mode: required
-groq: configured locally
-wsl2 kali: ready for authorized tasks</pre>
+ai: free local fallback ready
+remediation: snapshots and rollback enabled</pre>
           </article>
         </section>
       </main>
     </div>
-    <script src="./app.js"></script>
+    <script src="./redaction.js"></script>
+    <script src="./singleton.js"></script>
+    <script src="./app.js?v=6"></script>
   </body>
 </html>
